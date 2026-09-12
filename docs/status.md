@@ -2,12 +2,12 @@
 
 Fast-moving hackathon handoff — the current state, what's next, and open decisions. Updated Sep 12. `docs/plan.md` is the source of truth for the design; this file is "where are we right now." Keep it short and current.
 
-## Current state — hello-world milestone DONE ✅
+## Current state — interpreted-villager loop DEPLOYED ✅
 
-- The **midwife** is deployed to Vercel production and **replies to `@mentions` in Slack** (round-trip confirmed).
-- Model: **`openai/gpt-5.6-luna-fast`** (OpenAI Luna) via Vercel AI Gateway. David added **$10** of AI Gateway credits, so premium OpenAI/Anthropic models also work now.
-- Slack is wired via **Vercel Connect** — a managed Slack app (no manifest), authorized into a workspace, forwarding events to `/eve/v1/slack`.
-- The midwife's identity is still the scaffold default ("You are a helpful assistant") — not yet the real midwife.
+- **One app (`@villager`), two roles by channel:** midwife in `#villager-management` (`C0C0YRB5M47`); the first villager **Exa Researcher** 🔎 in `#village-exa-researcher` (`C0C1GK8SGKT`).
+- **Built + deployed this session:** midwife identity (`agent/instructions.md`); `post_as_villager` tool; the Exa Researcher villager folder (`scripts/search.sh` cached + live-tested, fixture); the sandbox (seeds `village/**`, brokers the Exa key at the firewall); the channel→villager registry (`agent/lib/villages.ts`); the channel-routed **listen/run loop** (`agent/channels/slack.ts` — listen on every message, act only when addressed, framing injected via the mention `context`); the memory seam (`agent/lib/memory-ingest.ts`, no-op).
+- Model **`openai/gpt-5.6-luna-fast`** via Vercel AI Gateway. Slack via **Vercel Connect** (managed app, no manifest).
+- **Not yet verified live:** the full loop round-trip (`@villager <question>` → 🔎 sourced brief). Watch for a double-post (model told to reply only via `post_as_villager`).
 
 ## Operational reference
 
@@ -22,16 +22,22 @@ Fast-moving hackathon handoff — the current state, what's next, and open decis
 
 ## Next (build)
 
-1. Give the midwife its **real identity** (`agent/instructions.md`) — the midwife role from `docs/plan.md`.
-2. **Interview → birth** flow (Track A): threaded interview incl. "show me an example of the input", template-fill a villager folder under `agent/sandbox/workspace/village/villagers/<name>/`, create the channel, announce under the villager's own name, **git-commit** the folder (sandbox is not durable; the midwife must commit).
-3. **Run loop** (Track B): villager `run_stage` + `post`, single stage, execute a script, post result.
-4. **Learning loop**: correction in thread → villager proposes a knowledge atom → human confirms ("yes", native button — **no 👍 bridge**) → passes fixture → committed with author's name → changes next run.
+1. **Live-test the loop** in `#village-exa-researcher`: `@villager <research question>` → 🔎 Exa Researcher posts a sourced brief with a Confidence line. Watch for double-post; confirm `search.sh` runs in the sandbox with the brokered key.
+2. **Merge Ren's `rooms/` memory** into the village folder, then wire it into the `ingestForMemory()` seam.
+3. **`birth`/`commit` pipeline**: threaded interview incl. "show me an example of the input" → template-fill a villager folder → append the channel→villager entry to `agent/lib/villages.ts` → **git-commit** (sandbox is not durable; the midwife must commit). Channel is pre-created by a human (auto-create deferred — `channels:manage` not grantable).
+4. **Learning loop**: correction in thread → villager proposes a knowledge atom → human confirms → passes the fixture → committed with author's name → changes the next run.
 
 ## Open decisions (waiting on David)
 
-- **Demo workflow is UNDECIDED** — blocks the script library and the birth template. Recommendation on the table: incoming-request triage (multiplayer, corrections-are-rules, no external OAuth). Alt: weekly status roll-up.
-- **`/project-status`** entry drafted (prototype→running) but not yet written — awaiting confirm.
-- **`/shelloverflow`** post on the `eve deploy` bug — offered, not done.
+- **Enable `message.channels` on the Connect trigger** (Advanced → Trigger Event Types) so in-thread corrections without a re-mention reach `onMessage`. @mentions already work without it.
+- **`/project-status`** update — worth offering once the loop is proven live (crosses prototype→running).
+- **`/shelloverflow`** post — the persona-in-one-app + sandbox credential-brokering findings are genuinely novel; offer at a good commit.
+
+## Resolved (was open)
+
+- **Demo workflow = Exa-powered Researcher villager** (research question → sourced brief; corrections tune source taste). No OAuth; showcases the $50 Exa credits.
+- **Trigger = native `@villager` mention**; channel disambiguates the villager. Listen always, act only when addressed.
+- **Registry lives in git** (`agent/lib/villages.ts`), not Blob.
 
 ## Not done / parked
 

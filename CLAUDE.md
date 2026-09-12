@@ -2,7 +2,7 @@
 
 Hackathon build (AI Tinkerers Columbus, "Agents, Everywhere", Sep 12 2026). A **midwife** agent lives in Slack, interviews a human about a workflow, and births a **villager** agent as a folder (instructions + deterministic scripts + fixture + wiki) into its own channel (the **village**). The villager learns in public: corrections from anyone in the channel become attributed knowledge atoms once a human confirms, must pass the fixture, and evolve the folder. Runtime is Vercel's Eve framework (agents as directories, sandbox, Slack channel).
 
-**Status (Sep 12):** hello-world milestone done — the midwife is deployed to Vercel and replies to `@mentions` in Slack (via Vercel Connect); model `openai/gpt-5.6-luna-fast`. Live: `https://it-takes-a-village-orpin.vercel.app`. Next: give the midwife its real identity + the interview flow.
+**Status (Sep 12):** the interpreted-villager loop is deployed. One app (renamed `@villager`) plays two roles by channel — midwife in `#villager-management`, the first villager **Exa Researcher** 🔎 in `#village-exa-researcher`. Built: midwife identity, `post_as_villager`, the Exa Researcher folder (cached `search.sh` + fixture), the channel→villager registry, and the channel-routed listen/run loop (listen always, act only when addressed). Model `openai/gpt-5.6-luna-fast`. Live: `https://it-takes-a-village-orpin.vercel.app`. Demo workflow is decided (Exa researcher). Next: live-test the loop, merge Ren's `rooms/` memory, build the `birth`/`commit` pipeline.
 
 **Read `docs/plan.md` first — it is the source of truth.** Whiteboard photos are in `docs/whiteboard/`; the deploy-and-brains board is written up in `docs/architecture-deploy-and-brains.md`. Eve framework verification is in `docs/eve-verification.md`.
 

@@ -93,9 +93,9 @@ Deferred to `docs/future.md`: `dm/<user_id>/` personal pools (kept gitignored), 
 
 The filmed loop is small: **interview → birth → run → correct → rerun.** Privacy: the repo, video, and post are public — fictional names and synthetic data only.
 
-**OPEN DECISION — the concrete demo workflow.** Pick one simple, channel-native workflow that a handful of humans plausibly share and that demos read-only or dry-run (so no risky live writes on camera). The choice drives which scripts go in the library. Name it before building the script library.
+**DECIDED — the demo workflow is an Exa-powered Researcher villager.** A human posts a research question in the channel; the villager runs a real web search (Exa) and posts a short, *sourced* brief ending with a Confidence line. Corrections tune its research taste — "exclude vendor blogs", "only sources from the last 12 months", "always name the primary source" — which map to deterministic search params and required brief sections, so a confirmed correction changes the next run and the fixture can assert it offline. No external OAuth (Exa is an API key), naturally multiplayer, and it showcases the hackathon's $50 Exa credits. Read-only by nature — no risky writes on camera. Live-call risk is de-risked by caching results to a fixture so a filmed rerun is deterministic.
 
-Storyboard (2:00): 0:00–0:40 birth by interview, ending with the midwife creating the channel and moving in under the villager's own name; 0:40–1:40 `@villager run` → a miss → a human corrects it in-thread → the villager proposes the rule → a human confirms with a "yes" → the rule is committed with their name on it → rerun passes the fixture and succeeds; 1:40–2:00 open the villager folder to show it's readable and editable, and — if built — the `eve deploy` graduation with the Vercel dashboard as proof.
+Storyboard (2:00): 0:00–0:40 birth by interview, ending with the midwife announcing the villager in its (human-pre-created) channel under its own name and face; 0:40–1:40 `@villager <research question>` → a sourced brief → a human corrects its taste in-thread (e.g. "exclude vendor blogs") → the villager proposes the rule as an atom → a human confirms with a plain "yes" → the atom is committed with their name on it → rerun follows the new rule and passes the fixture; 1:40–2:00 open the villager folder to show it's readable and editable, and — if built — the `eve deploy` graduation with the Vercel dashboard as proof.
 
 ## Scope: core / stretch / plan B
 
@@ -109,7 +109,7 @@ Plan B, triggered if the midwife isn't working by 1:45: hand-write one villager 
 
 ## Build-day timeline (11:15–3:30)
 
-0:00–0:30 — Eve Slack agent deployed to Vercel, hello-world `@mention` round-trip. **✅ DONE** (deployed via `vercel deploy --prod`; Slack via Vercel Connect; model `openai/gpt-5.6-luna-fast`). 0:30–1:30 — midwife: interview → template fill → folder committed → birth announced. 1:30–2:15 — run loop, single stage. 2:15–3:00 — learning loop: correction → attributed rule → rerun. 3:00–3:30 — record the video. Then stretch items in order. Submission window is 3:30–4:00; the video is the submission.
+0:00–0:30 — Eve Slack agent deployed to Vercel, hello-world `@mention` round-trip. **✅ DONE**. 0:30–1:30 — midwife: interview → template fill → folder committed → birth announced. *Birth/commit tool still to build; the villager folder, `post_as_villager`, and the channel-routed run loop are **✅ DONE** and deployed.* 1:30–2:15 — run loop, single stage. **✅ built (Exa Researcher via channel routing) — pending live verification.** 2:15–3:00 — learning loop: correction → attributed atom → rerun. *Villager reads corrections in-thread; the confirm→commit→fixture path is the next build (ties into Ren's `rooms/` memory).* 3:00–3:30 — record the video. Then stretch items in order. Submission window is 3:30–4:00; the video is the submission.
 
 ## Prep (allowed: templates, libraries, components, data — the midwife and loop are built live)
 

@@ -58,6 +58,9 @@ Live production: `https://it-takes-a-village-orpin.vercel.app` — Slack events 
 
 ## Layout
 
-- `agent/` — the **midwife** (the Eve root agent Eve compiles).
-- `agent/sandbox/workspace/village/` — birthed villagers (`villagers/`) and community brains (`rooms/`), git-tracked as the source of truth (see `docs/plan.md`).
-- `docs/` — planning docs (Eve ignores these).
+- `agent/` — the **midwife** (the Eve root agent Eve compiles). The one Slack app (`@villager`) plays a different role per channel; a mention in a village channel acts as that channel's villager.
+- `agent/channels/slack.ts` — the listen/run loop: resolves the villager by channel and frames the turn; listens on every message, acts only when addressed.
+- `agent/lib/villages.ts` — the channel→villager registry (birth-time config, in git). `agent/lib/memory-ingest.ts` — the memory-ingestion seam (no-op; integration notes inside).
+- `agent/sandbox/sandbox.ts` — seeds the village into `/workspace` and brokers the Exa key at the firewall.
+- `agent/sandbox/workspace/village/` — birthed villagers (`villagers/`, e.g. `exa-researcher/`) and community brains (`rooms/`), git-tracked as the source of truth (see `docs/plan.md`).
+- `docs/` — planning docs (Eve ignores these). Start with `docs/status.md` for current state.

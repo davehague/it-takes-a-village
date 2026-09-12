@@ -6,6 +6,23 @@ Living doc for the judge submission video (AI Tinkerers Columbus, "Agents, Every
 
 Born in the channel, learns in public. Someone describes a workflow in Slack; minutes later a new teammate is born into its own channel — as a readable folder anyone can open, not a black box — does the work, gets corrected by someone in the channel, and the villager offers to save that correction as a knowledge atom; a human confirms and it becomes attributed knowledge the whole channel's villager carries. If a judge remembers one clip: a casual correction in a thread visibly teaches the agent, with the corrector's name on it. That is the thing a 1:1 chatbox cannot do.
 
+## What's built vs. what's next (for slide accuracy — Sep 12)
+
+So the slides show what actually exists and frame the rest as the near-term path, not vaporware:
+
+**Accomplished (deployed and live):**
+- One app (`@villager`) plays two roles by channel: **midwife** in `#villager-management`, **Exa Researcher** 🔎 in `#village-exa-researcher`.
+- A villager speaks in its own name + face (`post_as_villager`) in a channel it isn't even a member of.
+- The first villager is a **readable folder** — instructions, a deterministic `search.sh` (real Exa web search, cached), a fixture — seeded into the sandbox, git as source of truth.
+- The **channel-routed listen/run loop**: it listens to the whole channel but only acts when addressed; a mention routes to the right villager by channel.
+- The Exa key is **brokered at the firewall** — no secret in the folder or the repo.
+
+**Will accomplish (near-term, in build order):**
+- The **birth-by-interview pipeline** (midwife interviews → fills the folder → commits → announces) — today the folder is hand-placed; next it's born on camera.
+- The **learning loop end to end**: correction → proposed atom → human confirm → passes fixture → committed with author's name → changes the next run. (Villager already reads in-thread corrections; the confirm→commit path plugs into the community-brain memory.)
+- The **community brain** accumulating attributed atoms per channel (Ren's memory layer).
+- Stretch: `eve deploy` **graduation** — the same folder becomes its own deployment.
+
 ## Judging-criteria mapping (say the rubric's words on camera)
 
 - **Innovation & Theme ("Agents, Everywhere"):** "born in the channel, learns in public." A 1:1 chatbox can't reproduce multiplayer witnessing or a shared knowledge pool — that's the top-score language. Show birth happening *inside* the channel.
@@ -18,8 +35,8 @@ Born in the channel, learns in public. Someone describes a workflow in Slack; mi
 
 Capture more than we need; cut to 2:00. Rough allocation (see `plan.md` for exact timings):
 
-1. **Birth by interview (~0:40).** Screen-record the Slack thread: a human describes the workflow, the midwife asks one question at a time, ends with "show me an example of the input" (seeds the fixture). Final beat: the midwife creates the workflow channel and announces itself under the villager's own name. *This is the money shot — get it clean.*
-2. **Run → miss → correct → rerun (~1:00).** `@villager run` → wrong output → someone in the channel adds the missing rule in-thread → the villager proposes the rule → a human confirms with a plain "yes" → the rule is committed *with their name on it* → rerun passes the fixture and posts the right result. Show the rule/atom file getting written and committed if we can.
+1. **Birth by interview (~0:40).** Screen-record the Slack thread in `#villager-management`: a human describes the workflow ("a researcher that answers our questions with sourced findings"), the midwife asks one question at a time, ends with "show me an example of the input" (seeds the fixture). Final beat: the midwife announces **Exa Researcher** 🔎 in its channel under its own name and face. *This is the money shot — get it clean.* (Channel is pre-created by a human; auto-create is deferred.)
+2. **Run → correct → rerun (~1:00).** In `#village-exa-researcher`: `@villager <a research question>` → 🔎 Exa Researcher posts a short **sourced brief** ending with a Confidence line → someone in the channel corrects its taste in-thread ("exclude vendor blogs" / "only sources from the last 12 months") → the villager proposes saving that as a knowledge atom → a human confirms with a plain "yes" → the atom is committed *with their name on it* → rerun follows the new rule and passes the fixture. Show the atom file getting written and committed if we can.
 3. **It's a readable folder (~0:10).** Open the villager folder — instructions, a script, the new atom with the author's name. The legibility beat: you can read and edit your teammate.
 4. **Graduation (~0:10, stretch).** `eve deploy` from the villager folder, Vercel Agent Runs dashboard as proof it's a real deployment. Only if built and time allows.
 
@@ -28,7 +45,7 @@ Capture more than we need; cut to 2:00. Rough allocation (see `plan.md` for exac
 The two venue whiteboards are the clearest one-glance explanation — use them as cutaway diagrams over narration:
 
 - **Board 1** (`docs/whiteboard/midwife-create-flow.jpg`): the Create loop — humans ↔ midwife → villager → server/deploy, with Memory.
-- **Board 2** (`docs/whiteboard/deploy-and-brains.jpg`): deploy paths (midwife → server, midwife → Slack workspace + workflow channel) and the two brains (community brain vs personal brain in DM) with the promotion arrow. See `docs/architecture-deploy-and-brains.md`.
+- **Board 2** (`docs/whiteboard/deploy-and-brains.jpg`): deploy paths and the brains. **For the video, the personal-brain-in-DM + promotion arrow is future vision — this build is community-brain only.** Use board 2 as a "where this goes next" cutaway, not a claim of what's built. See `docs/architecture-deploy-and-brains.md`.
 
 A 5-second animated redraw of board 2 to explain "learns in public + promotion" without narration eating time is a nice-to-have, not required.
 
@@ -62,7 +79,7 @@ A 5-second animated redraw of board 2 to explain "learns in public + promotion" 
 
 ## Open decisions before recording
 
-- **The concrete demo workflow** (drives the script library and everything on screen) — still open in `plan.md`.
-- Channel naming convention (`#workflow_name` vs `#<villager>` vs room-first) — must be consistent on screen.
+- ~~The concrete demo workflow~~ **DECIDED: the Exa-powered Researcher villager** (see `plan.md`).
+- ~~Channel naming convention~~ **DECIDED: `#village-<name>` for a villager, `#villager-management` for the midwife.** Keep it consistent on screen.
 - Whether the graduation beat makes the cut (depends on build progress by 3:00).
 - Who narrates and whether voice is recorded live or dubbed.
