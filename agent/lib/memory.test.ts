@@ -4,27 +4,40 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { buildProgressiveContext, compileRoomMemory, ensureRoomStructure, readAtoms } from "./memory.ts";
+import {
+  appendRawTrace,
+  buildProgressiveContext,
+  compileRoomMemory,
+  ensureRoomStructure,
+  inferKind,
+  readAtoms,
+  recordAtom,
+} from "./memory.ts";
+
+async function room(): Promise<string> {
+  return join(await mkdtemp(join(tmpdir(), "memory-room-")), "room");
+}
+
+const FINDING = {
+  id: "a1",
+  author: "ren",
+  source: "exa",
+  citation: "arXiv:2608.27454",
+  text: "Skills evolved on a smaller model improved a larger one, so the text carries the capability.",
+};
+
+const RULE = {
+  id: "a2",
+  author: "david",
+  source: "slack",
+  text: "Prefer primary sources: a blog post summarizing a paper is not the paper.",
+};
 
 test("compileRoomMemory creates themes and graph", async () => {
-  const roomPath = join(await mkdtemp(join(tmpdir(), "memory-room-")), "room");
+  const roomPath = await room();
 
-  await compileRoomMemory(roomPath, [
-    {
-      id: "a1",
-      author: "ren",
-      source: "slack",
-      text: "When the ticket is missing the customer email, ask for the email before proceeding.",
-    },
-    {
-      id: "a2",
-      author: "david",
-      source: "slack",
-      text: "Escalate blocked tickets when customer contact is missing.",
-    },
-  ]);
-
-  const context = await buildProgressiveContext(roomPath, "email");
+  await compileRoomMemory(roomPath, [FINDING, RULE]);
+  const context = await buildProgressiveContext(roomPath, "skills");
 
   assert.ok(context.themes.length > 0);
   assert.ok(context.atoms.length > 0);
@@ -33,55 +46,95 @@ test("compileRoomMemory creates themes and graph", async () => {
   await rm(roomPath, { recursive: true, force: true });
 });
 
-test("a later correction adds to the room without wiping earlier atoms", async () => {
-  const roomPath = join(await mkdtemp(join(tmpdir(), "memory-room-")), "room");
+test("research accumulates — a new finding never displaces an older one", async () => {
+  const roomPath = await room();
 
-  await compileRoomMemory(roomPath, [
-    { id: "a1", author: "ren", source: "slack", text: "Ask for the customer email before proceeding." },
-  ]);
-
-  // The learning loop compiles one new atom at a time; the first must survive.
-  await compileRoomMemory(roomPath, [
-    { id: "a2", author: "david", source: "slack", text: "Escalate blocked tickets after 24 hours." },
-  ]);
+  await compileRoomMemory(roomPath, [FINDING]);
+  await recordAtom(roomPath, {
+    id: "a3",
+    author: "ren",
+    source: "exa",
+    citation: "https://example.org/synthetic-report",
+    text: "A second sourced result found later in the same investigation.",
+  });
 
   const atoms = await readAtoms(roomPath);
-  assert.deepEqual(
-    atoms.map((atom) => atom.id).sort(),
-    ["a1", "a2"],
-  );
+  assert.deepEqual(atoms.map((atom) => atom.id).sort(), ["a1", "a3"]);
 
   const index = await readFile(join(roomPath, "index.md"), "utf8");
-  assert.match(index, /a1/);
-  assert.match(index, /a2/);
+  assert.match(index, /a1|smaller model/);
+  assert.match(index, /a3|second sourced/);
 
   await rm(roomPath, { recursive: true, force: true });
 });
 
-test("progressive context ranks by content and keeps attribution", async () => {
-  const roomPath = join(await mkdtemp(join(tmpdir(), "memory-room-")), "room");
+test("a finding keeps its citation and its author through to context", async () => {
+  const roomPath = await room();
+
+  await compileRoomMemory(roomPath, [FINDING]);
+  const context = await buildProgressiveContext(roomPath, "skills");
+  const atom = context.atoms.find((candidate) => candidate.id === "a1");
+
+  assert.ok(atom);
+  assert.equal(atom.kind, "finding");
+  assert.equal(atom.citation, "arXiv:2608.27454");
+  assert.equal(atom.author, "ren");
+
+  await rm(roomPath, { recursive: true, force: true });
+});
+
+test("the room's rules load on every run, even when the query does not match them", async () => {
+  const roomPath = await room();
+
+  await compileRoomMemory(roomPath, [FINDING, RULE]);
+  // Nothing in the rule mentions photosynthesis; it still has to shape the run.
+  const context = await buildProgressiveContext(roomPath, "photosynthesis");
+
+  assert.equal(context.atoms[0].kind, "rule");
+  assert.equal(context.atoms[0].author, "david");
+
+  await rm(roomPath, { recursive: true, force: true });
+});
+
+test("kinds are inferred from how people write", async () => {
+  assert.equal(inferKind("Does the transfer result hold across harnesses?"), "question");
+  assert.equal(inferKind("Never cite a preprint without saying it is one."), "rule");
+  assert.equal(inferKind("The 9B model scored 12 points higher on the benchmark."), "finding");
+});
+
+test("index.md surfaces open questions and uncited findings", async () => {
+  const roomPath = await room();
 
   await compileRoomMemory(roomPath, [
-    { id: "a1", author: "ren", source: "slack", text: "Ask for the customer email before proceeding." },
-    { id: "a2", author: "david", source: "slack", text: "Escalate blocked tickets after 24 hours." },
+    { id: "q1", author: "david", source: "slack", kind: "question", text: "Open question: does this replicate?" },
+    { id: "f1", author: "ren", source: "exa", kind: "finding", text: "An unsourced claim we still need to back up." },
   ]);
 
-  const context = await buildProgressiveContext(roomPath, "email");
+  const index = await readFile(join(roomPath, "index.md"), "utf8");
+  assert.match(index, /Open questions/);
+  assert.match(index, /missing a citation/);
+  assert.match(index, /f1/);
 
-  // "email" lives in the atom body and only in the customer_data theme — never in a filename.
-  assert.equal(context.atoms[0].id, "a1");
-  assert.equal(context.atoms[0].author, "ren");
-  assert.equal(context.themes[0].name, "customer_data");
+  await rm(roomPath, { recursive: true, force: true });
+});
+
+test("raw traces append rather than overwrite", async () => {
+  const roomPath = await room();
+
+  const path = await appendRawTrace(roomPath, "first search", "results A");
+  await appendRawTrace(roomPath, "second search", "results B");
+
+  const raw = await readFile(path, "utf8");
+  assert.match(raw, /results A/);
+  assert.match(raw, /results B/);
 
   await rm(roomPath, { recursive: true, force: true });
 });
 
 test("ensureRoomStructure leaves a compiled room intact", async () => {
-  const roomPath = join(await mkdtemp(join(tmpdir(), "memory-room-")), "room");
+  const roomPath = await room();
 
-  await compileRoomMemory(roomPath, [
-    { id: "a1", author: "ren", source: "slack", text: "Ask for the customer email before proceeding." },
-  ]);
+  await compileRoomMemory(roomPath, [FINDING]);
   await ensureRoomStructure(roomPath);
 
   const index = await readFile(join(roomPath, "index.md"), "utf8");
@@ -91,7 +144,7 @@ test("ensureRoomStructure leaves a compiled room intact", async () => {
 });
 
 test("atom ids from chat text cannot escape the atoms directory", async () => {
-  const roomPath = join(await mkdtemp(join(tmpdir(), "memory-room-")), "room");
+  const roomPath = await room();
 
   await compileRoomMemory(roomPath, [
     { id: "../../escaped", author: "ren", source: "slack", text: "A rule with a hostile id." },

@@ -14,8 +14,12 @@ import { z } from "zod";
  * because the managed Slack app exposes no static token.
  */
 
-// Fallback workspace id (the hackathon Slack team). Prefer the inbound event's
-// teamId, then SLACK_TEAM_ID; this constant only covers turns with neither.
+// A tool's execute() runs outside every Slack handler, so there is no `ctx.slack`
+// handle to read the inbound event's teamId from — the docs are explicit that
+// "outside those contexts there is no handle" and that the caller must pass the
+// workspace itself (channels/slack.mdx). So teamId comes from SLACK_TEAM_ID, and
+// this constant is the zero-config fallback that keeps the hackathon workspace
+// working on a machine with no env file. A second workspace must set the env var.
 const DEFAULT_TEAM_ID = "T0C28HCG1R6";
 const DEFAULT_CONNECTOR = "slack/it-takes-a-village";
 
@@ -49,15 +53,12 @@ export default defineTool({
   label: {
     start: ({ villagerName, channel }) => `Post as ${villagerName} in ${channel}`,
   },
-  async execute({ channel, villagerName, text, iconEmoji, threadTs }, ctx) {
+  async execute({ channel, villagerName, text, iconEmoji, threadTs }) {
     const connector = process.env.SLACK_CONNECTOR ?? DEFAULT_CONNECTOR;
     const credentials = connectSlackCredentials(connector);
 
     // teamId picks the workspace whose app installation mints the token.
-    const teamId =
-      (ctx as { slack?: { teamId?: string } }).slack?.teamId ??
-      process.env.SLACK_TEAM_ID ??
-      DEFAULT_TEAM_ID;
+    const teamId = process.env.SLACK_TEAM_ID ?? DEFAULT_TEAM_ID;
 
     const response = await callSlackApi({
       botToken: credentials.botToken,

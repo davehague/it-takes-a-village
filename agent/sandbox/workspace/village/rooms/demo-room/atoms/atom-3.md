@@ -1,11 +1,12 @@
 ---
 id: atom-3
+kind: rule
 author: ren
 source: slack
 created_at: 2026-09-12T18:10:00.000Z
 themes:
-  - approval
-  - workflow
+  - findings
+  - scope
 ---
 
-Every workflow run should confirm the human approval before posting a side effect.
+Only include work from the last 24 months unless it is foundational to the question, and say which it is.

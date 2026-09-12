@@ -32,11 +32,19 @@ Side effects (posting, and later writing to a calendar or ticket) run dry by def
 
 ## The community brain
 
-This version has **one memory pool: the community brain** — the channel's shared wiki. What the humans in the channel teach the villager becomes attributed knowledge atoms, keyed by channel ID. This is the "learns in public" pool: one person's correction, once confirmed, is knowledge the whole channel's villager carries.
+This version has **one memory pool: the community brain** — the channel's shared wiki, keyed by channel ID, all of it markdown on disk. What the humans in the channel teach the villager becomes attributed atoms. This is the "learns in public" pool: one person's correction, once confirmed, is knowledge the whole channel's villager carries. The format is specified in `docs/room-memory.md` and implemented in `agent/lib/memory.ts`.
 
-How a correction becomes knowledge: someone corrects the villager in a thread → the villager **proposes** saving a knowledge atom → a human confirms → the midwife commits the atom (with the author's name) after it passes the fixture. The villager proposes; it never writes its own memory unilaterally.
+**Villagers are research agents.** A villager researches a question for the room it lives in — "Exa Researcher" in `#village-exa-researcher` is the demo one — so its memory is shaped for research and grows as the investigation does. An atom is one of three kinds:
 
-Context for any turn: the last N messages plus always-loaded themes, with progressive disclosure down to individual atoms and the originating messages when needed. Compaction — deterministic chunking/bookkeeping/file writes plus LLM atom extraction — rolls raw traces into atoms and themes.
+- a **finding**, a sourced claim carrying a citation (an uncited finding is hearsay, and `index.md` lists the ones still missing a source);
+- a **question**, something the room wants chased down and cannot answer yet — the villager's standing agenda;
+- a **rule**, how *these humans* want research done ("prefer primary sources", "last 24 months unless foundational"). A correction in the channel becomes a rule, and that is the mechanism by which the next run is better than the last.
+
+Themes are a research vocabulary — `sources`, `findings`, `methods`, `open_questions`, `contradictions`, `terminology`, `scope`, `quality` — generated from the atoms beneath them, along with `index.md` (the research map) and `graph.json`. Atoms are append-only; the derived files are rewritten on every compile.
+
+How a correction becomes knowledge: someone corrects the villager in a thread → the villager **proposes** saving an atom → a human confirms → the atom is written with the author's name on it after it passes the fixture. The villager proposes; it never writes its own memory unilaterally.
+
+Context for any turn: the last N messages, the always-loaded themes, and **every rule the room has taught** — rules apply to each run rather than only to a query that happens to match them — with progressive disclosure down to individual atoms, their citations, and the raw trace they came from. Raw traces append to a dated file per day and are never edited, so every claim stays traceable to the search that produced it. Compaction — deterministic chunking, bookkeeping and file writes plus LLM atom extraction — rolls those traces into atoms and themes.
 
 Deferred to `docs/future.md`: the personal/DM brain, promotion between pools, and the org-wide pool. This version is community-brain only.
 
