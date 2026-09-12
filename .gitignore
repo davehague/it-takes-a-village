@@ -12,3 +12,6 @@ dist
 
 # It Takes a Village: private DM pools never go in the public repo
 dm/
+
+# Villager runtime output (results/cache); fixtures stay tracked
+agent/sandbox/workspace/village/villagers/*/stages/*/output/
