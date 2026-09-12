@@ -1,5 +1,23 @@
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+
+/**
+ * The community brain for a research villager.
+ *
+ * Everything is markdown on disk, and the room only ever grows: each finding the
+ * villager turns up, each question it cannot yet answer, and each rule the humans
+ * teach it becomes one more atom file. `themes/`, `index.md` and `graph.json` are
+ * derived from those atoms, so they are rewritten on every compile while the atoms
+ * themselves are append-only.
+ */
+
+/**
+ * What a research atom is. A `finding` is a sourced claim and should carry a
+ * citation; a `question` is something the room wants chased down; a `rule` is how
+ * these humans want research done — that is what a correction in the channel
+ * becomes, and it is why the next run is better than the last.
+ */
+export type AtomKind = "finding" | "question" | "rule";
 
 export type MemoryEntry = {
   id?: string;
@@ -8,6 +26,9 @@ export type MemoryEntry = {
   text: string;
   createdAt?: string;
   themes?: string[];
+  kind?: AtomKind;
+  /** Where a finding came from: a URL, DOI, or arXiv id. Findings without one are hearsay. */
+  citation?: string;
 };
 
 export type MemoryAtom = {
@@ -19,6 +40,8 @@ export type MemoryAtom = {
   evidence: string;
   themes: string[];
   tags: string[];
+  kind: AtomKind;
+  citation: string | null;
 };
 
 export type MemoryTheme = {
@@ -36,6 +59,8 @@ export type ProgressiveContext = {
     summary: string;
     evidence: string;
     themes: string[];
+    kind: AtomKind;
+    citation: string | null;
   }>;
   graph: {
     nodes: Array<{ id: string; type: "theme" | "atom"; label: string }>;
@@ -43,17 +68,35 @@ export type ProgressiveContext = {
   };
 };
 
+/** A research vocabulary. Themes stay small and always-loaded; atoms are the detail below them. */
 const DEFAULT_THEME_KEYWORDS: Record<string, string[]> = {
-  triage: ["triage", "intake", "ticket", "request", "queue"],
-  escalation: ["escalate", "urgent", "blocked", "risk", "priority"],
-  approval: ["approve", "approved", "review", "confirm", "yes"],
-  customer_data: ["email", "customer", "contact", "phone", "address"],
-  workflow: ["workflow", "process", "sequence", "steps", "handoff"],
-  policy: ["rule", "policy", "must", "always", "never"],
-  learning: ["learn", "teach", "remember", "correct", "update"],
+  sources: ["citation", "cite", "doi", "arxiv", "preprint", "paper", "journal", "url"],
+  findings: ["found", "shows", "result", "evidence", "measured", "reported", "data", "outperform", "improved", "higher", "lower", "degraded", "effect", "score"],
+  methods: ["method", "benchmark", "dataset", "protocol", "sample", "replication", "ablation", "baseline"],
+  open_questions: ["unclear", "unknown", "unanswered", "open question", "untested", "todo", "not sure"],
+  contradictions: ["contradicts", "disagrees", "conflicting", "refutes", "disputed", "however", "fails to replicate"],
+  terminology: ["means", "definition", "defined", "term", "acronym", "refers to", "jargon"],
+  scope: ["only", "exclude", "include", "ignore", "since", "recent", "limit to", "out of scope"],
+  quality: ["peer-reviewed", "retracted", "primary source", "secondary", "credible", "low quality", "blog post"],
 };
 
-/** Atom ids and theme names become filenames, and both can originate in Slack text. */
+const RULE_MARKERS = [
+  "always",
+  "never",
+  "prefer",
+  "don't",
+  "do not",
+  "must",
+  "only",
+  "ignore",
+  "exclude",
+  "stop",
+  "instead of",
+];
+
+const QUESTION_MARKERS = ["open question", "unclear", "unknown", "we don't know", "need to check", "untested"];
+
+/** Atom ids, theme names and kinds become filenames, and all of them can originate in Slack text. */
 function toSafeName(value: string, fallback: string): string {
   const safe = value
     .replace(/[^A-Za-z0-9._-]+/g, "-")
@@ -124,10 +167,22 @@ export function summarizeText(text: string): string {
 export function inferThemes(text: string): string[] {
   const lowered = text.toLowerCase();
   const matches = Object.entries(DEFAULT_THEME_KEYWORDS)
-    .filter(([, keywords]) => keywords.some((keyword) => lowered.includes(keyword.toLowerCase())))
+    .filter(([, keywords]) => keywords.some((keyword) => lowered.includes(keyword)))
     .map(([theme]) => theme);
 
   return matches.length > 0 ? matches : ["general"];
+}
+
+/** A stopgap until the midwife's maintainer classifies atoms with a model. */
+export function inferKind(text: string): AtomKind {
+  const lowered = normalizeText(text).toLowerCase();
+  if (lowered.endsWith("?") || QUESTION_MARKERS.some((marker) => lowered.includes(marker))) {
+    return "question";
+  }
+  if (RULE_MARKERS.some((marker) => lowered.includes(marker))) {
+    return "rule";
+  }
+  return "finding";
 }
 
 export function createAtom(entry: MemoryEntry): MemoryAtom {
@@ -137,6 +192,7 @@ export function createAtom(entry: MemoryEntry): MemoryAtom {
   const evidence = normalizeText(entry.text);
   const explicit = (entry.themes ?? []).map((theme) => toSafeName(theme, "general"));
   const themes = explicit.length > 0 ? explicit : inferThemes(evidence);
+  const citation = entry.citation ? normalizeText(entry.citation) : null;
 
   return {
     id,
@@ -147,6 +203,8 @@ export function createAtom(entry: MemoryEntry): MemoryAtom {
     evidence,
     themes,
     tags: themes,
+    kind: entry.kind ?? inferKind(evidence),
+    citation,
   };
 }
 
@@ -175,30 +233,40 @@ export async function ensureRoomStructure(roomPath: string): Promise<void> {
 async function writeAtomFile(atomPath: string, atom: MemoryAtom): Promise<void> {
   const themes = atom.themes.length > 0 ? atom.themes : ["general"];
   const themeLines = themes.map((theme) => `  - ${theme}`).join("\n");
-  const content = `---\nid: ${atom.id}\nauthor: ${atom.author}\nsource: ${atom.source}\ncreated_at: ${atom.createdAt}\nthemes:\n${themeLines}\n---\n\n${atom.evidence}\n`;
+  const citationLine = atom.citation ? `citation: ${atom.citation}\n` : "";
+  const content = `---\nid: ${atom.id}\nkind: ${atom.kind}\nauthor: ${atom.author}\nsource: ${atom.source}\n${citationLine}created_at: ${atom.createdAt}\nthemes:\n${themeLines}\n---\n\n${atom.evidence}\n`;
   await writeFile(atomPath, content, "utf8");
 }
 
+function atomLine(atom: MemoryAtom): string {
+  const cite = atom.citation ? ` — ${atom.citation}` : "";
+  return `- **${atom.kind}** \`${atom.id}\` (${atom.author}): ${atom.summary}${cite}`;
+}
+
 async function writeThemeFile(themePath: string, themeName: string, atoms: MemoryAtom[]): Promise<void> {
-  const summary = `${themeName} (${atoms.length} atom${atoms.length === 1 ? "" : "s"}) — ${atoms
-    .slice(0, 3)
-    .map((atom) => atom.summary)
-    .join("; ")}`;
+  const counts = countKinds(atoms);
+  const summary = `${themeName} — ${atoms.length} atom${atoms.length === 1 ? "" : "s"} (${counts.finding} findings, ${counts.question} questions, ${counts.rule} rules)`;
 
   const content = `---\ntheme: ${themeName}\nsummary: ${summary}\natoms:\n${atoms
     .map((atom) => `  - ${atom.id}`)
-    .join("\n")}\n---\n\n${atoms.map((atom) => `- ${atom.id} (${atom.author}): ${atom.summary}`).join("\n")}\n`;
+    .join("\n")}\n---\n\n${atoms.map(atomLine).join("\n")}\n`;
 
   await writeFile(themePath, content, "utf8");
 }
 
-/** Reads the atoms already committed to a room. The atom files are the source of truth. */
+function countKinds(atoms: MemoryAtom[]): Record<AtomKind, number> {
+  const counts: Record<AtomKind, number> = { finding: 0, question: 0, rule: 0 };
+  for (const atom of atoms) counts[atom.kind] += 1;
+  return counts;
+}
+
+/** Reads the atoms already in a room. The atom files are the source of truth. */
 export async function readAtoms(roomPath: string): Promise<MemoryAtom[]> {
   const atomDir = join(roomPath, "atoms");
   const files = (await readdir(atomDir).catch(() => [])).filter((file) => file.endsWith(".md"));
 
   const atoms = await Promise.all(
-    files.map(async (file) => {
+    files.map(async (file): Promise<MemoryAtom | null> => {
       const content = await readFile(join(atomDir, file), "utf8").catch(() => "");
       const { frontmatter, body } = splitDocument(content);
       const evidence = normalizeText(body);
@@ -206,6 +274,7 @@ export async function readAtoms(roomPath: string): Promise<MemoryAtom[]> {
 
       const { scalars, lists } = parseFrontmatter(frontmatter);
       const themes = lists.themes?.length ? lists.themes : inferThemes(evidence);
+      const kind = scalars.kind as AtomKind | undefined;
 
       return {
         id: scalars.id ?? file.replace(/\.md$/, ""),
@@ -216,7 +285,9 @@ export async function readAtoms(roomPath: string): Promise<MemoryAtom[]> {
         evidence,
         themes,
         tags: themes,
-      } satisfies MemoryAtom;
+        kind: kind === "finding" || kind === "question" || kind === "rule" ? kind : inferKind(evidence),
+        citation: scalars.citation ?? null,
+      };
     }),
   );
 
@@ -226,9 +297,9 @@ export async function readAtoms(roomPath: string): Promise<MemoryAtom[]> {
 }
 
 /**
- * Compiles `entries` into the room. Atoms already on disk survive — a correction adds knowledge,
- * it never wipes what the channel taught earlier. `themes/`, `index.md`, and `graph.json` are
- * regenerated from the full set, so they always describe every atom present.
+ * Compiles `entries` into the room. Atoms already on disk survive — research
+ * accumulates, so a new finding never displaces an older one. `themes/`,
+ * `index.md` and `graph.json` are regenerated from the full set.
  */
 export async function compileRoomMemory(roomPath: string, entries: MemoryEntry[]): Promise<MemoryTheme[]> {
   await ensureRoomStructure(roomPath);
@@ -260,9 +331,10 @@ export async function compileRoomMemory(roomPath: string, entries: MemoryEntry[]
   const written = new Set<string>();
 
   for (const [themeName, themeAtoms] of [...themeMap].sort(([a], [b]) => a.localeCompare(b))) {
+    const counts = countKinds(themeAtoms);
     themeEntries.push({
       name: themeName,
-      summary: `${themeName} (${themeAtoms.length} atom${themeAtoms.length === 1 ? "" : "s"})`,
+      summary: `${themeAtoms.length} atom${themeAtoms.length === 1 ? "" : "s"} — ${counts.finding} findings, ${counts.question} questions, ${counts.rule} rules`,
       atoms: themeAtoms.map((atom) => atom.id),
     });
 
@@ -293,11 +365,41 @@ export async function compileRoomMemory(roomPath: string, entries: MemoryEntry[]
     ),
   };
 
-  const indexLines = ["# Theme map", ""];
+  const counts = countKinds(atoms);
+  const open = atoms.filter((atom) => atom.kind === "question");
+  const rules = atoms.filter((atom) => atom.kind === "rule");
+  const uncited = atoms.filter((atom) => atom.kind === "finding" && atom.citation === null);
+
+  const indexLines = [
+    "# Research map",
+    "",
+    `${atoms.length} atoms — ${counts.finding} findings, ${counts.question} open questions, ${counts.rule} rules taught by the room.`,
+    "",
+  ];
+
+  if (rules.length > 0) {
+    indexLines.push("## How this room wants research done", "");
+    for (const atom of rules) indexLines.push(`- ${atom.summary} — *${atom.author}*`);
+    indexLines.push("");
+  }
+
+  if (open.length > 0) {
+    indexLines.push("## Open questions", "");
+    for (const atom of open) indexLines.push(`- ${atom.summary} — *${atom.author}*`);
+    indexLines.push("");
+  }
+
+  indexLines.push("## Themes", "");
   for (const theme of themeEntries) {
-    indexLines.push(`## ${theme.name}`);
-    indexLines.push(`- summary: ${theme.summary}`);
+    indexLines.push(`### ${theme.name}`);
+    indexLines.push(`- ${theme.summary}`);
     indexLines.push(`- atoms: ${theme.atoms.join(", ")}`);
+    indexLines.push("");
+  }
+
+  if (uncited.length > 0) {
+    indexLines.push("## Findings still missing a citation", "");
+    for (const atom of uncited) indexLines.push(`- \`${atom.id}\`: ${atom.summary}`);
     indexLines.push("");
   }
 
@@ -305,6 +407,33 @@ export async function compileRoomMemory(roomPath: string, entries: MemoryEntry[]
   await writeFile(join(roomPath, "graph.json"), `${JSON.stringify(graph, null, 2)}\n`, "utf8");
 
   return themeEntries;
+}
+
+/**
+ * Adds one atom as research develops and rebuilds the derived files around it.
+ * This is the call a villager's run step makes per finding, and the call the
+ * learning loop makes when a human's correction is confirmed as a rule.
+ */
+export async function recordAtom(roomPath: string, entry: MemoryEntry): Promise<MemoryAtom> {
+  const atom = createAtom(entry);
+  await compileRoomMemory(roomPath, [{ ...entry, id: atom.id, createdAt: atom.createdAt }]);
+  return atom;
+}
+
+/**
+ * Appends a raw research trace — a search's results, a run's output — to a
+ * dated, append-only file under `raw/`. Nothing here is ever edited or
+ * summarized in place: it is the evidence trail an atom points back to.
+ */
+export async function appendRawTrace(roomPath: string, label: string, text: string): Promise<string> {
+  await ensureRoomStructure(roomPath);
+
+  const day = new Date().toISOString().slice(0, 10);
+  const path = join(roomPath, "raw", `${day}.md`);
+  const stamp = new Date().toISOString();
+
+  await appendFile(path, `\n## ${stamp} — ${normalizeText(label)}\n\n${text.trim()}\n`, "utf8");
+  return path;
 }
 
 function queryTerms(query: string): string[] {
@@ -320,9 +449,10 @@ function scoreText(text: string, terms: string[]): number {
 }
 
 /**
- * Layer 1 is the generated theme list, layer 2 atom summaries, layer 3 the exact evidence.
- * Themes are ranked by the atoms that claim them, not by their filename. With no usable query
- * terms this degrades to the most recent atoms, which is the "last N" behaviour we want.
+ * Layer 1 is the generated theme list, layer 2 atom summaries, layer 3 the exact
+ * evidence and its citation. Themes are ranked by the atoms that claim them, not
+ * by their filename. Rules always come back regardless of the query — how the room
+ * wants research done applies to every run, not just a matching one.
  */
 export async function buildProgressiveContext(
   roomPath: string,
@@ -346,7 +476,10 @@ export async function buildProgressiveContext(
 
   const atomScores = new Map<string, number>();
   for (const atom of atoms) {
-    const score = scoreText(atom.evidence, terms) * 2 + atom.themes.reduce((total, theme) => total + scoreText(theme, terms), 0);
+    const score =
+      scoreText(atom.evidence, terms) * 2 +
+      atom.themes.reduce((total, theme) => total + scoreText(theme, terms), 0) +
+      (atom.citation ? scoreText(atom.citation, terms) : 0);
     atomScores.set(atom.id, score);
   }
 
@@ -372,25 +505,38 @@ export async function buildProgressiveContext(
     .slice(0, limitThemes)
     .map(({ name, summary }) => ({ name, summary }));
 
-  const rankedAtoms = [...atoms]
+  const project = (atom: MemoryAtom) => ({
+    id: atom.id,
+    author: atom.author,
+    source: atom.source,
+    summary: atom.summary,
+    evidence: atom.evidence,
+    themes: atom.themes,
+    kind: atom.kind,
+    citation: atom.citation,
+  });
+
+  const rules = atoms.filter((atom) => atom.kind === "rule");
+  const ruleIds = new Set(rules.map((atom) => atom.id));
+
+  const ranked = atoms
+    .filter((atom) => !ruleIds.has(atom.id))
     .sort(
       (a, b) =>
         (atomScores.get(b.id) ?? 0) - (atomScores.get(a.id) ?? 0) ||
         b.createdAt.localeCompare(a.createdAt),
     )
     .slice(0, limitAtoms)
-    .map((atom) => ({
-      id: atom.id,
-      author: atom.author,
-      source: atom.source,
-      summary: atom.summary,
-      evidence: atom.evidence,
-      themes: atom.themes,
-    }));
+    .map(project);
 
-  return { themes, atoms: rankedAtoms, graph };
+  return { themes, atoms: [...rules.map(project), ...ranked], graph };
 }
 
+/**
+ * Seeds a room shaped like the Exa Researcher's: sourced findings, an open
+ * question, and the rules the humans in the channel taught it. Synthetic —
+ * the one citation is the paper `docs/plan.md` already cites.
+ */
 export async function createExampleRoom(roomPath: string): Promise<void> {
   await ensureRoomStructure(roomPath);
 
@@ -398,25 +544,51 @@ export async function createExampleRoom(roomPath: string): Promise<void> {
     {
       id: "atom-1",
       author: "ren",
-      source: "slack",
+      source: "exa",
+      kind: "finding",
+      citation: "arXiv:2608.27454",
       createdAt: "2026-09-12T18:00:00.000Z",
-      text: "When the ticket is missing the customer email, do not guess. Ask for the email first and mark the request as pending.",
+      text: "Skills evolved against a 4B model improved a 9B model without retraining, which is evidence that the maintained text carries the capability rather than the weights.",
     },
     {
       id: "atom-2",
       author: "david",
       source: "slack",
+      kind: "rule",
       createdAt: "2026-09-12T18:05:00.000Z",
-      text: "Escalate any blocked request when the customer has not replied within 24 hours or the issue risk is high.",
+      text: "Prefer primary sources: a blog post summarizing a paper is not the paper. Cite the paper or say you could not reach it.",
     },
     {
       id: "atom-3",
       author: "ren",
       source: "slack",
+      kind: "rule",
       createdAt: "2026-09-12T18:10:00.000Z",
-      text: "Every workflow run should confirm the human approval before posting a side effect.",
+      text: "Only include work from the last 24 months unless it is foundational to the question, and say which it is.",
+    },
+    {
+      id: "atom-4",
+      author: "david",
+      source: "slack",
+      kind: "question",
+      createdAt: "2026-09-12T18:15:00.000Z",
+      text: "Open question: does the cross-model transfer result hold when the harness changes too, not just the model? Untested as far as we can tell.",
+    },
+    {
+      id: "atom-5",
+      author: "ren",
+      source: "exa",
+      kind: "finding",
+      createdAt: "2026-09-12T18:20:00.000Z",
+      text: "Giving the executing agent write access to its own wiki during evolution degraded final skill quality, so execution and maintenance were kept as separate roles.",
+      citation: "arXiv:2608.27454",
     },
   ];
 
   await compileRoomMemory(roomPath, entries);
+  await appendRawTrace(
+    roomPath,
+    "seed trace — how this room was started",
+    "Seeded by `agent/lib/memory-demo.ts`. Real traces land here as the villager searches: the query, the results it kept, and the run output an atom points back to. Append-only.",
+  );
 }
