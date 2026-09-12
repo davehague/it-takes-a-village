@@ -2,6 +2,12 @@
 
 Running status for It Takes a Village. Newest first. `plan.md` is the source of truth for the design; this is what is actually done, decided, blocked, and next.
 
+## Sep 12 — Villager reads its brain; seed atoms cleared to learn in public
+
+Wired the memory **read** side and fixed a legitimacy problem. The Exa Researcher now reads `memory/index.md` before every answer (`instructions.md` step 1 + a `cat memory/index.md` line in the `villages.ts` framing) and obeys any rules the channel has taught it, saying which rule shaped the answer.
+
+Cleared the seed atoms. Ren's `createExampleRoom` fixture had fabricated atoms attributing rules to "david"/"ren" ("prefer primary sources", "last 24 months") as if said in the channel — and they directly contradicted the villager's own `instructions.md`, which said the learned-rules list was "none yet". For legitimacy (the public video shouldn't imply conversations that never happened) and a stronger demo (watch it learn a rule live, then obey it), the brain now starts **empty and valid** (`index.md` = "0 atoms", empty `atoms/`/`themes/`/`raw/` with `.gitkeep`). `memory-demo.ts` was retargeted to a `mkdtemp` scratch dir so it stays a format demo and can never re-pollute a live villager. Eve memory recall/capture is turn-tied (mention-only), so the passive `ingestForMemory()` seam stays a no-op — deferred as not demo-relevant. Tests green (9/9), tsc clean.
+
 ## Sep 12 — Memory design resolved: one folder per villager (collapsed `rooms/`)
 
 Decided and merged: the community brain is **not** a separate `rooms/<channel_id>/` tree. One channel = one villager, so `rooms/` and `villagers/` keyed the same 1:1 thing twice. Collapsed the community brain into the villager's own folder as `villagers/<slug>/memory/` — the accumulating atoms/themes/index *are* the villager's living wiki (no separate curated wiki). Merged Ren's `demo-room/` fixture into `villagers/exa-researcher/memory/`; his compiler (`agent/lib/memory.ts`, `memory.test.ts`) is untouched since `compileRoomMemory` takes any path — only `memory-demo.ts`'s one path line changed. Tests stay green (9/9); the demo regenerates at the new path. The Slack channel still selects the store via `villagerForChannel(channelId).dir` + `/memory`.

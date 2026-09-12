@@ -1,34 +1,13 @@
 # Research map
 
-5 atoms — 2 findings, 1 open questions, 2 rules taught by the room.
+0 atoms — the channel hasn't taught me anything yet.
+
+I start empty and learn in public. When someone here corrects how I research — "exclude vendor blogs", "only the last 12 months", "always name the primary source" — and a human confirms it, that rule is recorded below with their name, and it changes how I search and write from then on. Until then, I just do my normal sourced search.
 
 ## How this room wants research done
 
-- Prefer primary sources: a blog post summarizing a paper is not the paper. Cite the paper or say you could not reach it. — *david*
-- Only include work from the last 24 months unless it is foundational to the question, and say which it is. — *ren*
+_(none yet)_
 
 ## Open questions
 
-- Open question: does the cross-model transfer result hold when the harness changes too, not just the model? Untested as far as we can tell. — *david*
-
-## Themes
-
-### findings
-- 4 atoms — 2 findings, 1 questions, 1 rules
-- atoms: atom-1, atom-3, atom-4, atom-5
-
-### open_questions
-- 1 atom — 0 findings, 1 questions, 0 rules
-- atoms: atom-4
-
-### quality
-- 1 atom — 0 findings, 0 questions, 1 rules
-- atoms: atom-2
-
-### scope
-- 1 atom — 0 findings, 0 questions, 1 rules
-- atoms: atom-3
-
-### sources
-- 1 atom — 0 findings, 0 questions, 1 rules
-- atoms: atom-2
+_(none yet)_
