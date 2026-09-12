@@ -40,8 +40,8 @@ function villagerFraming(
     `Its folder is at ${villager.dir} in the sandbox (bash runs with cwd /workspace).`,
     `To answer: read ${villager.dir}/instructions.md with read_file and follow it, then run its scripts with the bash tool, e.g.:`,
     `  cd ${villager.dir} && mkdir -p stages/01-research/output && SEARCH_OUT_DIR="$(pwd)/stages/01-research/output" scripts/search.sh "<the question>"`,
-    `Deliver your ENTIRE reply by calling the post_as_villager tool with channel="${channelId}", villagerName="${villager.name}", iconEmoji="${villager.icon}", threadTs="${replyThreadTs}". Put the whole brief in that tool's text.`,
-    `After the post_as_villager call, end your turn with NO further assistant text — the villager speaks only through post_as_villager, so a second plain reply would double-post as the app.`,
+    `Deliver your ENTIRE reply by calling the post_as_villager tool EXACTLY ONCE with channel="${channelId}", villagerName="${villager.name}", iconEmoji="${villager.icon}", threadTs="${replyThreadTs}". Put the whole brief in that one tool call's text.`,
+    `Call post_as_villager once and only once. Do NOT call it again to revise, re-post, or correct yourself, and do NOT react to your own earlier posts. After that single call, end your turn with NO further assistant text.`,
     `Never answer from memory or as the midwife: every claim in the brief cites a source, and the brief ends with a "Confidence:" line.`,
   ].join("\n");
 }
@@ -56,6 +56,16 @@ export default slackChannel({
   threadContext: {},
 
   async onAppMention(ctx: SlackInboundMessageContext, message: SlackMessage) {
+    // Never let a bot (including our own villager posts) trigger a turn.
+    const rawMention = message.raw as { bot_id?: unknown; subtype?: unknown };
+    if (
+      message.author?.isBot ||
+      typeof rawMention.bot_id === "string" ||
+      rawMention.subtype === "bot_message"
+    ) {
+      return null;
+    }
+
     // Passive ingest: record the addressing message too (listen always).
     await ingestForMemory({
       channelId: message.channelId,
@@ -107,17 +117,14 @@ export default slackChannel({
       ts: message.ts,
     });
 
-    // Act only when addressed: an explicit mention, an active thread this
-    // session already owns, or a DM/private channel. Otherwise drop (no reply);
-    // the message stays in Slack history as raw context to read on demand.
-    const addressed =
-      ctx.isBotMentioned() ||
-      (await ctx.isSubscribed()) ||
-      (await ctx.isDMOrPrivateChannel());
-    if (!addressed) return null;
+    // Act ONLY on an explicit human @mention. We deliberately do NOT auto-continue
+    // on subscribed threads or DMs here: auto-continue is what let a villager's own
+    // posts (or any follow-up) re-trigger turns and spiral into a runaway loop.
+    // The trade-off — a correction must re-mention @villager — is worth the safety.
+    // (app_mention normally routes to onAppMention; this covers mentions that
+    // arrive as a plain `message` event.)
+    if (!ctx.isBotMentioned()) return null;
 
-    // Keep acting as the channel's villager on thread continuations (e.g. a
-    // correction typed in-thread without a re-mention).
     const villager = villagerForChannel(message.channelId);
     if (!villager) return { auth: null };
 
