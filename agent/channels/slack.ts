@@ -40,9 +40,8 @@ function villagerFraming(
     `Its folder is at ${villager.dir} in the sandbox (bash runs with cwd /workspace).`,
     `To answer: read ${villager.dir}/instructions.md with read_file and follow it, then run its scripts with the bash tool, e.g.:`,
     `  cd ${villager.dir} && mkdir -p stages/01-research/output && SEARCH_OUT_DIR="$(pwd)/stages/01-research/output" scripts/search.sh "<the question>"`,
-    `Deliver your ENTIRE reply by calling the post_as_villager tool EXACTLY ONCE with channel="${channelId}", villagerName="${villager.name}", iconEmoji="${villager.icon}", threadTs="${replyThreadTs}". Put the whole brief in that one tool call's text.`,
-    `Call post_as_villager once and only once. Do NOT call it again to revise, re-post, or correct yourself, and do NOT react to your own earlier posts. After that single call, end your turn with NO further assistant text.`,
-    `Never answer from memory or as the midwife: every claim in the brief cites a source, and the brief ends with a "Confidence:" line.`,
+    `Then reply with the finished brief as your normal assistant message — write it in GitHub-flavored Markdown (bold, [label](url) links, - lists); it renders natively in Slack. Reply exactly once and then stop; do NOT call post_as_villager, and do NOT re-post or revise a previous answer.`,
+    `Answer only from the search results, never from memory or as the midwife: every claim cites a source, and the brief ends with a "Confidence:" line.`,
   ].join("\n");
 }
 
