@@ -2,6 +2,18 @@
 
 Running status for It Takes a Village. Newest first. `plan.md` is the source of truth for the design; this is what is actually done, decided, blocked, and next.
 
+## Sep 12 — Loop works live (after a runaway-loop scare)
+
+Milestone: `@villager <question>` in `#village-exa-researcher` returns **one clean, Markdown-rendered, Exa-sourced brief** with a Confidence line. The full interpreted-villager path works end to end on `anthropic/claude-sonnet-5`.
+
+### Fixed on the way here (three real bugs)
+- **Runaway reply loop (50+ posts).** `post_as_villager` posts with a custom username, which Eve's self-message filter does not recognize as the app's own, so each villager reply re-triggered `onMessage` on the subscribed thread. Fix: act ONLY on an explicit human `@villager` mention (removed the `isSubscribed`/DM auto-continue) and drop all bot-authored messages in both handlers. Had to pull the Eve/Connect installation to stop it mid-incident (a code deploy alone didn't, likely because events were still routing to an older deployment until reinstall re-pointed them).
+- **Double-post + "Empty model response" turn failure.** Caused by instructing the model to reply only via `post_as_villager` and emit no final text — Eve treats an empty final message as a failed turn, errors, and retries (the second near-identical brief).
+- **Raw Markdown** (`**bold**`, `[label](url)` shown literally) because the reply went out in Slack's mrkdwn `text` field.
+
+### The fix that stuck (Option A)
+A villager turn now replies with its brief as the **normal assistant message**. Eve's default reply (`thread.post`) sends it as Slack `markdown_text`, so GitHub-flavored Markdown renders, and there is no empty-final failure. No `post_as_villager` on the reply path (kept for birth announcements). Trade-off: run replies show the app name **"villager"**, not "Exa Researcher" 🔎 — identity is introduced at birth. Switched model Luna → **Sonnet 5** for fewer empty completions. Details in `docs/eve-verification.md`.
+
 ## Sep 12 — First villager born + channel-routed listen/run loop deployed
 
 Milestone: the interpreted-villager loop is live in production. The one app now plays two roles by channel — midwife in `#villager-management`, **Exa Researcher** 🔎 in `#village-exa-researcher` — and the routing, the first real villager, and the memory seam are all deployed.

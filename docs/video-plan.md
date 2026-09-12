@@ -17,6 +17,8 @@ So the slides show what actually exists and frame the rest as the near-term path
 - The **channel-routed listen/run loop**: it listens to the whole channel but only acts when addressed; a mention routes to the right villager by channel.
 - The Exa key is **brokered at the firewall** — no secret in the folder or the repo.
 
+*Reply identity note for filming:* run replies currently post under the app name **"villager"** (a single, Markdown-rendered, Exa-sourced brief). The **birth announcement** is where "Exa Researcher" 🔎 is introduced by name and face. If we want the 🔎 face on every reply for the video, that's a quick switch to the two-post variant.
+
 **Will accomplish (near-term, in build order):**
 - The **birth-by-interview pipeline** (midwife interviews → fills the folder → commits → announces) — today the folder is hand-placed; next it's born on camera.
 - The **learning loop end to end**: correction → proposed atom → human confirm → passes fixture → committed with author's name → changes the next run. (Villager already reads in-thread corrections; the confirm→commit path plugs into the community-brain memory.)
