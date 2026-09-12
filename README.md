@@ -1,35 +1,49 @@
-# eve-probe
+# It Takes a Village
 
-This is an [eve](https://eve.dev) agent bootstrapped with [`eve init`](https://eve.dev/docs/reference/cli#eve-init).
+A midwife agent that interviews a human in Slack and births a **villager** agent — a readable folder of instructions, deterministic scripts, a fixture, and a wiki — into its own channel, where the team teaches it in public. Built on Vercel's [Eve](https://eve.dev) framework for the AI Tinkerers Columbus hackathon.
 
-## Getting started
+**Start with [`docs/plan.md`](docs/plan.md)** — it is the source of truth. Framework findings are in [`docs/eve-verification.md`](docs/eve-verification.md); deferred scope in [`docs/future.md`](docs/future.md).
 
-First, run the development server:
+## Prerequisites
 
-```bash
-eve dev
-```
+- **Node.js >= 24** (Eve requires it). If you use nvm: `nvm use 24`.
+- A Vercel account (for the AI Gateway credential that powers the agent's model calls).
 
-The development TUI opens an interactive session where you can send messages to your agent.
-
-Start by editing `agent/instructions.md` to define the agent's identity, purpose, tone, and response guidelines. Configure its model and runtime behavior in `agent/agent.ts`.
-
-Add capabilities under `agent/`, including tools, connections, channels, skills, subagents, and schedules. eve reloads your changes as you work.
-
-## Learn more
-
-To learn more about eve, explore these resources:
-
-- [eve documentation](https://eve.dev/docs) — learn about eve's features and authoring APIs.
-- [Build an Agent tutorial](https://eve.dev/docs/tutorial/first-agent) — build and deploy an agent step by step.
-- [eve on GitHub](https://github.com/vercel/eve) — view the source and contribute.
-
-## Deploy on Vercel
-
-Deploy your agent to [Vercel](https://vercel.com) from the project root:
+## Setup
 
 ```bash
-eve deploy
+npm install
+cp .env.example .env.local        # then fill in the values (see below)
+eve link --project it-takes-a-village   # links to Vercel and writes VERCEL_OIDC_TOKEN to .env.local
 ```
 
-`eve deploy` links a Vercel project if needed and deploys the agent to production. See the [eve deployment documentation](https://eve.dev/docs/guides/deployment/vercel) for authentication, environment variables, and deployment options.
+### Environment (`.env.local`, gitignored)
+
+| Variable | What it is | How to get it |
+| --- | --- | --- |
+| `AI_GATEWAY_API_KEY` | Vercel AI Gateway key — funds the agent's model calls ("the brain"). The exact name the AI SDK reads. | Vercel dashboard → AI Gateway → API Keys. |
+| `VERCEL_OIDC_TOKEN` | Fallback AI Gateway credential, auto-written by `eve link`. Short-lived; re-run `eve link` to refresh. | Automatic. |
+
+**Model note:** the repo uses `anthropic/claude-sonnet-5` via the Vercel AI Gateway. On this account, Anthropic models run with the Gateway key, while some OpenAI models (e.g. `openai/gpt-5.6-luna`) return `403 "Free tier users do not have access to this model"` until you add AI Gateway credits or use Bring Your Own Key. Change the model in `agent/agent.ts` or with `eve set --model <provider/model-id>`; free ($0) models such as `inclusionai/ling-3.0-flash-fin-free` also work.
+
+## Run
+
+```bash
+eve dev                 # interactive dev TUI
+eve dev --no-ui         # headless server; POST /eve/v1/session to talk to it
+eve invoke "hello"      # one-shot invocation without a UI
+```
+
+## Deploy
+
+```bash
+eve deploy              # deploys to the linked Vercel project
+```
+
+`AI_GATEWAY_API_KEY` must also be set in the Vercel project's environment for the deployment to make model calls (`vercel env add AI_GATEWAY_API_KEY`).
+
+## Layout
+
+- `agent/` — the **midwife** (the Eve root agent Eve compiles).
+- `agent/sandbox/workspace/village/` — birthed villagers (`villagers/`) and community brains (`rooms/`), git-tracked as the source of truth (see `docs/plan.md`).
+- `docs/` — planning docs (Eve ignores these).
