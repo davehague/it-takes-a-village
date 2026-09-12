@@ -1,0 +1,87 @@
+{
+    "display_information": {
+        "name": "it-takes-a-village",
+        "description": "It Takes a Village",
+        "background_color": "#996c9e"
+    },
+    "features": {
+        "app_home": {
+            "home_tab_enabled": false,
+            "messages_tab_enabled": true,
+            "messages_tab_read_only_enabled": false
+        },
+        "bot_user": {
+            "display_name": "it-takes-a-village",
+            "always_online": true
+        },
+        "agent_view": {
+            "agent_description": "It Takes a Village",
+            "suggested_prompts": []
+        }
+    },
+    "oauth_config": {
+        "redirect_urls": [
+            "https://connect.vercel.com/callback/scl_g32hxyh1ZP4wQiV3OOLRiQ",
+            "https://connect.vercel.com/callback"
+        ],
+        "scopes": {
+            "bot": [
+                "channels:manage",
+                "app_mentions:read",
+                "assistant:write",
+                "bookmarks:read",
+                "channels:history",
+                "channels:read",
+                "chat:write",
+                "chat:write.customize",
+                "chat:write.public",
+                "dnd:read",
+                "emoji:read",
+                "files:read",
+                "files:write",
+                "groups:history",
+                "im:history",
+                "im:read",
+                "im:write",
+                "metadata.message:read",
+                "pins:read",
+                "reactions:read",
+                "reactions:write",
+                "team:read",
+                "usergroups:read",
+                "users.profile:read",
+                "users:read"
+            ]
+        },
+        "pkce_enabled": false
+    },
+    "settings": {
+        "event_subscriptions": {
+            "request_url": "https://connect.vercel.com/trigger/scl_g32hxyh1ZP4wQiV3OOLRiQ",
+            "bot_events": [
+                "app_context_changed",
+                "app_home_opened",
+                "app_mention",
+                "entity_details_requested",
+                "member_joined_channel",
+                "message.channels",
+                "message.groups",
+                "message.im",
+                "reaction_added",
+                "reaction_removed"
+            ]
+        },
+        "interactivity": {
+            "is_enabled": true,
+            "request_url": "https://connect.vercel.com/trigger/scl_g32hxyh1ZP4wQiV3OOLRiQ"
+        },
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": false,
+        "token_rotation_enabled": true,
+        "is_mcp_enabled": false,
+        "managed_app_settings": {
+            "is_install_from_slack_disabled": true,
+            "external_app_management_url": "https://vercel.com/dhaggerfins-projects/~/connect/scl_g32hxyh1ZP4wQiV3OOLRiQ"
+        }
+    }
+}
