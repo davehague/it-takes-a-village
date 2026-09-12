@@ -1,5 +1,13 @@
-.env
-.env.*
-node_modules/
-.vercel/
+node_modules
+.env*
+.eve
+.vercel
+.next
+.output
+.nitro
+dist
+.DS_Store
+*.tsbuildinfo
+
+# It Takes a Village: private DM pools never go in the public repo
 dm/

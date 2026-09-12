@@ -1,8 +1,12 @@
 # It Takes a Village
 
-Hackathon build (AI Tinkerers Columbus, "Agents, Everywhere", Sep 12 2026). A **midwife** agent lives in Slack, interviews a human about a workflow, and births a **villager** agent as a folder (instructions + deterministic scripts + fixture + wiki) into its own channel (the **village**). The villager learns in public: corrections from anyone in the channel become attributed knowledge atoms after a 👍, must pass the fixture, and evolve the folder. Runtime is Vercel's Eve framework (agents as directories, sandbox, Slack channel).
+Hackathon build (AI Tinkerers Columbus, "Agents, Everywhere", Sep 12 2026). A **midwife** agent lives in Slack, interviews a human about a workflow, and births a **villager** agent as a folder (instructions + deterministic scripts + fixture + wiki) into its own channel (the **village**). The villager learns in public: corrections from anyone in the channel become attributed knowledge atoms once a human confirms, must pass the fixture, and evolve the folder. Runtime is Vercel's Eve framework (agents as directories, sandbox, Slack channel).
 
-**Read `docs/plan.md` first — it is the source of truth.** Whiteboard photos are in `docs/whiteboard/`. `docs/brainstorm-second-reader.md` is a parked alternate concept, context only.
+**Read `docs/plan.md` first — it is the source of truth.** Whiteboard photos are in `docs/whiteboard/`; the deploy-and-brains board is written up in `docs/architecture-deploy-and-brains.md`. Eve framework verification is in `docs/eve-verification.md`.
+
+Eve's authoring guidance for coding agents (how to build tools, channels, connections; read `node_modules/eve/docs` first) lives in `AGENTS.md`, imported here:
+
+@AGENTS.md
 
 ## Team and tracking
 
@@ -10,13 +14,13 @@ David Hague and Ren, both developers using Claude. Work is split and tracked in 
 
 ## Scope for today (~3 hours)
 
-Core: midwife interview → template-filled villager folder → channel created → birth announced under its own name; single-stage run loop (`run_stage`, `post`) executing library scripts in the Eve sandbox; minimal learning loop (correction → proposed atom → 👍 from birthing user → passes fixture → committed → rerun). Compose scripts from a library (`fetch_calendar`, `check_csv_anomalies`, `format_post`, `search_literature` via Exa); do not generate novel code today.
+Core: midwife interview → template-filled villager folder → channel created → birth announced under its own name; single-stage run loop (`run_stage`, `post`) executing library scripts in the Eve sandbox; minimal learning loop (correction → proposed atom → confirmed by the birthing user → passes fixture → committed → rerun). Compose scripts from a small pre-written library selected and parameterized at birth (the exact scripts depend on the chosen demo workflow — see plan.md); do not generate novel code today.
 
-Stretch, in order: `eve deploy` graduation; DM/personal brain vs community brain with an explicit promotion process; full ICM multi-stage folders; org-level pool.
+Stretch, in order: `eve deploy` graduation; full ICM multi-stage folders. Deferred beyond stretch (parked in `docs/future.md`): DM/personal brain and the promotion process, org-level pool.
 
-Plan B if the midwife isn't working by 1:45: hand-write the family villager folder and demo the learning loop.
+Plan B if the midwife isn't working by 1:45: hand-write one villager folder and demo the learning loop.
 
-Demo: family Slack, hero beat is David's wife birthing a weekly pickup/dropoff scheduler from home, uncoached (window 2:15–3:00). Science cutaway is pre-built seed data. Privacy: fictional names/events only; no school names; no kids in repo, video, or post.
+Demo: the filmed loop is interview → birth → run → correct → rerun, all inside one Slack channel with multiple humans (plus the midwife and the brains). The concrete demo workflow is an open decision — see plan.md "Demo plan". Privacy: repo, video, and post are public — fictional names and synthetic data only.
 
 ## Hard rules
 
@@ -29,11 +33,11 @@ Demo: family Slack, hero beat is David's wife birthing a weekly pickup/dropoff s
 
 ## Environment
 
-- Node is not on the default PATH: prepend `~/.nvm/versions/node/v22.17.0/bin` before `node`, `npx`, `pnpm`.
+- Node is not on the default PATH: prepend `~/.nvm/versions/node/v24.3.0/bin` before `node`, `npx`, `pnpm`. Eve requires Node >=24 — the older v22.17.0 cannot run Eve 0.54.3.
 - Credits: $50 OpenAI (big model for interview/birth, mini for compaction; hard spend limit set), $50 Exa. No other vendor credits.
-- Slack app scopes needed: `chat:write`, `chat:write.customize`, `channels:manage`, `channels:read`, `channels:history`, `reactions:read`, `app_mentions:read`, `users:read`. Run in socket mode locally.
+- Slack app scopes needed: `chat:write`, `chat:write.customize`, `channels:manage`, `channels:read`, `channels:history`, `reactions:read`, `app_mentions:read`, `users:read` (plus `im:history`, `im:write` for DMs). Eve's Slack channel is **HTTP Events API only — no socket mode**; deploy to Vercel and point the Slack app's Request URL at `https://<deployment>/eve/v1/slack`. See `docs/eve-verification.md`.
 - Eve docs: https://vercel.com/docs/eve · https://vercel.com/docs/eve/concepts · https://eve.dev/docs · Slack starter: "Build your first Slack agent with eve" (vercel.com/kb). Eve is beta.
 
-## Unverified, load-bearing
+## Verification status
 
-Sandbox persistence across sessions (design assumes none — folder in git is state, sandbox re-seeds); loading a folder's `instructions.md` as context at runtime; whether Eve sessions compact or grow; tool approval gating from Slack; `conversations.create` from the app; Vercel plan supports Sandbox + Workflows for the graduation beat. Verify these first.
+Most load-bearing unknowns are now verified against Eve v0.54.3 — see `docs/eve-verification.md`. Resolved: runtime `instructions.md` loading works (`read_file`); sessions compact automatically; tool approval gating is native as Slack buttons (but 👍-as-approval must be hand-built); `conversations.create` and posting under a custom villager name are NOT native (raw `ctx.slack.request` escape hatch). Design correction: git is the source of truth — the sandbox persists per session but is not durable, and Eve does not sync sandbox writes to git, so the midwife must commit villager folders explicitly. Still open: whether the Vercel plan supports Sandbox + Workflows for the graduation beat; whether to use `OPENAI_API_KEY` directly (to honor the $50 credit + hard spend limit) vs. Vercel AI Gateway.
