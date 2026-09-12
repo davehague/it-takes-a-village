@@ -38,6 +38,11 @@ Fast-moving hackathon handoff — the current state, what's next, and open decis
 - **Linear tickets were drafted in conversation but NOT created** (team "Ren Murakami", project "it-takes-a-village"), and are now partly stale: foundation (Slack/creds/deploy) is largely done; the 👍 reaction ticket (B4) was cut; workflow-specific tickets wait on the demo-workflow decision. Redraft against current state before creating.
 - Deferred to `docs/future.md`: personal/DM brain, promotion, org pool, `eve deploy` graduation, multi-stage villagers, novel script generation, UI viz layer. **This version is community-brain only.**
 
+## Coordination with Ren (Sep 12, active)
+
+- Ren is building the **community-brain memory** under `agent/sandbox/workspace/village/rooms/` (append-only rooms, content ranking; `agent/lib/memory.ts` + `memory-demo.ts`; a `demo-room/` fixture is already merged). **Leave `rooms/` to Ren for now** — we merge his memory into the village folder after our loop is proven, then wire it into the `ingestForMemory()` seam in `agent/lib/memory-ingest.ts`.
+- Our side owns the midwife, the villager folders/routing, and the birth/commit pipeline (next).
+
 ## Decisions locked this session (already in the docs)
 
 - Cut the mom-test/non-developer/from-home narrative; cut science/Battelle, OpenClaw, Second Reader, PR firm/voice/CopilotKit. Focus is purely the villager-in-a-channel + midwife + community brain.
