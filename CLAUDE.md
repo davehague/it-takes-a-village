@@ -2,6 +2,8 @@
 
 Hackathon build (AI Tinkerers Columbus, "Agents, Everywhere", Sep 12 2026). A **midwife** agent lives in Slack, interviews a human about a workflow, and births a **villager** agent as a folder (instructions + deterministic scripts + fixture + wiki) into its own channel (the **village**). The villager learns in public: corrections from anyone in the channel become attributed knowledge atoms once a human confirms, must pass the fixture, and evolve the folder. Runtime is Vercel's Eve framework (agents as directories, sandbox, Slack channel).
 
+**Status (Sep 12):** hello-world milestone done — the midwife is deployed to Vercel and replies to `@mentions` in Slack (via Vercel Connect); model `openai/gpt-5.6-luna-fast`. Live: `https://it-takes-a-village-orpin.vercel.app`. Next: give the midwife its real identity + the interview flow.
+
 **Read `docs/plan.md` first — it is the source of truth.** Whiteboard photos are in `docs/whiteboard/`; the deploy-and-brains board is written up in `docs/architecture-deploy-and-brains.md`. Eve framework verification is in `docs/eve-verification.md`.
 
 Eve's authoring guidance for coding agents (how to build tools, channels, connections; read `node_modules/eve/docs` first) lives in `AGENTS.md`, imported here:
@@ -35,7 +37,7 @@ Demo: the filmed loop is interview → birth → run → correct → rerun, all 
 
 - Node is not on the default PATH: prepend `~/.nvm/versions/node/v24.3.0/bin` before `node`, `npx`, `pnpm`. Eve requires Node >=24 — the older v22.17.0 cannot run Eve 0.54.3.
 - Credits: **$50 OpenAI Codex credits (1,250 Codex credits)** — these are Codex *usage* credits for the OpenAI Codex coding tool, NOT API credits and NOT a ChatGPT subscription. They can help us *build* (run Codex as a coding agent), but they CANNOT power the midwife's runtime brain, because Eve makes API-style model calls. Plus **$50 Exa** (search, not a model). We hold no LLM API credit, so the midwife's runtime model runs on **Vercel AI Gateway** (via `eve link`, uses its included allowance) or a real LLM API key — TBD, set Eve's spend guard either way.
-- Slack app scopes needed: `chat:write`, `chat:write.customize`, `channels:manage`, `channels:read`, `channels:history`, `reactions:read`, `app_mentions:read`, `users:read` (plus `im:history`, `im:write` for DMs). Eve's Slack channel is **HTTP Events API only — no socket mode**; deploy to Vercel and point the Slack app's Request URL at `https://<deployment>/eve/v1/slack`. See `docs/eve-verification.md`.
+- Slack app scopes needed: `chat:write`, `chat:write.customize`, `channels:manage`, `channels:read`, `channels:history`, `reactions:read`, `app_mentions:read`, `users:read` (plus `im:history`, `im:write` for DMs). Eve's Slack channel is **HTTP Events API only — no socket mode**. We use **Vercel Connect** (`vercel connect create slack --connection-method slack-app --name it-takes-a-village --triggers`) — a managed Slack app (no manifest), authorized into a workspace, forwarding events to `/eve/v1/slack` on the Vercel deployment. Deploy with `vercel deploy --prod` (the `eve deploy` wrapper is currently broken). See `docs/eve-verification.md`.
 - Eve docs: https://vercel.com/docs/eve · https://vercel.com/docs/eve/concepts · https://eve.dev/docs · Slack starter: "Build your first Slack agent with eve" (vercel.com/kb). Eve is beta.
 
 ## Verification status

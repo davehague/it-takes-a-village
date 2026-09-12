@@ -24,7 +24,7 @@ eve link --project it-takes-a-village   # links to Vercel and writes VERCEL_OIDC
 | `AI_GATEWAY_API_KEY` | Vercel AI Gateway key — funds the agent's model calls ("the brain"). The exact name the AI SDK reads. | Vercel dashboard → AI Gateway → API Keys. |
 | `VERCEL_OIDC_TOKEN` | Fallback AI Gateway credential, auto-written by `eve link`. Short-lived; re-run `eve link` to refresh. | Automatic. |
 
-**Model note:** the repo uses `anthropic/claude-sonnet-5` via the Vercel AI Gateway. On this account, Anthropic models run with the Gateway key, while some OpenAI models (e.g. `openai/gpt-5.6-luna`) return `403 "Free tier users do not have access to this model"` until you add AI Gateway credits or use Bring Your Own Key. Change the model in `agent/agent.ts` or with `eve set --model <provider/model-id>`; free ($0) models such as `inclusionai/ling-3.0-flash-fin-free` also work.
+**Model note:** the repo uses `openai/gpt-5.6-luna-fast` (OpenAI Luna) via the Vercel AI Gateway — a cheap, fast model. Premium models (OpenAI and Anthropic, e.g. `anthropic/claude-sonnet-5`) require **AI Gateway credits** — add them in the Vercel dashboard → AI Gateway → Budgets & Spend. A *budget* alone is only a spend cap, not funds; without credits, premium models return `403 "Free tier users do not have access to this model"`. Free ($0) models such as `inclusionai/ling-3.0-flash-fin-free` work without credits. Change the model in `agent/agent.ts` or with `eve set --model <provider/model-id>`.
 
 ## Run
 
@@ -34,13 +34,25 @@ eve dev --no-ui         # headless server; POST /eve/v1/session to talk to it
 eve invoke "hello"      # one-shot invocation without a UI
 ```
 
+## Slack (Vercel Connect)
+
+Slack is wired through **Vercel Connect** (`agent/channels/slack.ts` uses `connectSlackCredentials("slack/it-takes-a-village")`) — a **managed** Slack app, so there is no manifest to build. Provision the connector once:
+
+```bash
+vercel connect create slack --connection-method slack-app --name it-takes-a-village --triggers
+```
+
+A browser opens: **choose the Slack workspace** and authorize. This registers a managed Slack app, installs it, and points its event trigger at `/eve/v1/slack` on the production deployment. Then deploy (below). To use the bot, invite it to a channel (`/invite @it-takes-a-village`) or open a DM, and `@mention` it.
+
 ## Deploy
 
 ```bash
-eve deploy              # deploys to the linked Vercel project
+vercel deploy --prod --yes   # deploy the midwife to production
 ```
 
-`AI_GATEWAY_API_KEY` must also be set in the Vercel project's environment for the deployment to make model calls (`vercel env add AI_GATEWAY_API_KEY`).
+Note: `eve deploy` currently force-appends an invalid `--non-interactive` flag to its bundled Vercel CLI (v50.9.6) and fails — use `vercel deploy --prod` directly until that is fixed. `AI_GATEWAY_API_KEY` must be set in the Vercel project's **Production** environment for the deployment to make model calls (`vercel env add AI_GATEWAY_API_KEY production`).
+
+Live production: `https://it-takes-a-village-orpin.vercel.app` — Slack events arrive at `/eve/v1/slack`.
 
 ## Layout
 

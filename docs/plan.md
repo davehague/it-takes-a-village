@@ -46,7 +46,7 @@ A channel is the villager's room — its shared-memory scope, its audience, and 
 
 ## Runtime: Eve (verified)
 
-Eve is the runtime; an agent is a directory (`instructions.md`, `agent.ts`, `tools/`, `skills/`, `subagents/`, `channels/`, `connections/`, `sandbox/`). Verified facts for Eve v0.54.3 and the corrections they force are in `docs/eve-verification.md`. Headlines: Node ≥24; Slack is HTTP Events API (**no socket mode**) — deploy to Vercel and point the Slack Request URL at the deployment; sessions compact automatically; runtime file reads work; tool approval renders as native Slack buttons, and a plain-text "yes" resolves it (so no emoji-reaction bridge to build); posting under a custom villager name and creating a channel are not native (raw `ctx.slack.request` escape hatch with added scopes).
+Eve is the runtime; an agent is a directory (`instructions.md`, `agent.ts`, `tools/`, `skills/`, `subagents/`, `channels/`, `connections/`, `sandbox/`). Verified facts for Eve v0.54.3 and the corrections they force are in `docs/eve-verification.md`. Headlines: Node ≥24; Slack is HTTP Events API (**no socket mode**) — wired via **Vercel Connect** (a managed Slack app that forwards events to `/eve/v1/slack`), deployed with `vercel deploy --prod`; sessions compact automatically; runtime file reads work; tool approval renders as native Slack buttons, and a plain-text "yes" resolves it (so no emoji-reaction bridge to build); posting under a custom villager name and creating a channel are not native (raw `ctx.slack.request` escape hatch with added scopes).
 
 ## Repo layout
 
@@ -109,7 +109,7 @@ Plan B, triggered if the midwife isn't working by 1:45: hand-write one villager 
 
 ## Build-day timeline (11:15–3:30)
 
-0:00–0:30 — Eve Slack agent deployed to Vercel, hello-world `@mention` round-trip. 0:30–1:30 — midwife: interview → template fill → folder committed → birth announced. 1:30–2:15 — run loop, single stage. 2:15–3:00 — learning loop: correction → attributed rule → rerun. 3:00–3:30 — record the video. Then stretch items in order. Submission window is 3:30–4:00; the video is the submission.
+0:00–0:30 — Eve Slack agent deployed to Vercel, hello-world `@mention` round-trip. **✅ DONE** (deployed via `vercel deploy --prod`; Slack via Vercel Connect; model `openai/gpt-5.6-luna-fast`). 0:30–1:30 — midwife: interview → template fill → folder committed → birth announced. 1:30–2:15 — run loop, single stage. 2:15–3:00 — learning loop: correction → attributed rule → rerun. 3:00–3:30 — record the video. Then stretch items in order. Submission window is 3:30–4:00; the video is the submission.
 
 ## Prep (allowed: templates, libraries, components, data — the midwife and loop are built live)
 
