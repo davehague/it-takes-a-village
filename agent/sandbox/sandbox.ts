@@ -4,11 +4,13 @@ import type { SandboxNetworkPolicy } from "eve/sandbox";
 /**
  * Sandbox for the midwife. Two jobs:
  *
- * 1. Seed the village into /workspace. Everything under
- *    `agent/sandbox/workspace/**` mirrors 1:1 into the sandbox, so the villager
- *    folders and community brains live at `/workspace/village/...` at runtime.
- *    Git is still the source of truth — the midwife's commit tool writes changes
- *    back to this path (the sandbox is not durable).
+ * 1. Seed the village into /workspace. The folder layout (this
+ *    `agent/sandbox/sandbox.ts`, not the `agent/sandbox.ts` shorthand) is what
+ *    makes Eve mirror `agent/sandbox/workspace/**` into the sandbox cwd —
+ *    without this file the village tree never reaches `/workspace`. So the
+ *    villager folders and community brains live at `/workspace/village/...` at
+ *    runtime. Git is still the source of truth — the midwife's commit tool writes
+ *    changes back to this path (the sandbox is not durable).
  *
  * 2. Broker the Exa API key. Secrets never enter the sandbox: the firewall
  *    injects `x-api-key` for api.exa.ai via a per-domain transform, so a

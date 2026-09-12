@@ -4,7 +4,7 @@ Verified against Eve **v0.54.3**, using the framework's own version-matched docs
 
 ## Toolchain reality
 
-- **Eve requires Node >= 24.** The `~/.nvm/versions/node/v22.17.0/bin` pinned in `CLAUDE.md` cannot run Eve 0.54.3 (`eve` aborts: "requires Node.js >=24"). Use **`~/.nvm/versions/node/v24.3.0/bin`** (already installed). Update CLAUDE.md's Environment note.
+- **Eve requires Node >= 24.** The default v22 on PATH cannot run Eve 0.54.3 (`eve` aborts: "requires Node.js >=24"). Both of us have a v24 installed under nvm but at **different patch versions**, so a hardcoded path works on one machine and silently falls back to v22 on the other. Use `nvm use 24` or `export PATH="$(ls -d ~/.nvm/versions/node/v24*/bin | tail -1):$PATH"`.
 - **`eve init` refuses a non-empty directory.** It also writes its own `CLAUDE.md`/`AGENTS.md`/`README.md` and runs `git init`. We merged the scaffold into the repo root by hand: kept our project `CLAUDE.md`, saved Eve's coding-agent guide to `docs/eve-build-guide.md`, merged `.gitignore` (kept `dm/` ignored), renamed the package. `npm install` done; `eve info` reports **Compile ready, 0 errors, 10 tools**; `tsc` passes.
 - App layout: app root = repo root, agent root = `agent/`. Default scaffold model is `openai/gpt-5.6-luna-fast` (set the interview/birth model deliberately via `eve set` or `agent/agent.ts`).
 
