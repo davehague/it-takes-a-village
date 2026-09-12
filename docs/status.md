@@ -24,7 +24,7 @@ Fast-moving hackathon handoff — the current state, what's next, and open decis
 ## Next (build)
 
 1. ~~Live-test the loop~~ **DONE** — one clean sourced reply confirmed. (Optional: decide whether to add the 🔎 per-reply face via the two-post variant.)
-2. **Memory design decision (David flagged for next):** analyze Ren's `rooms/<channel_id>/` format (append-only `atoms/` + generated `themes/`/`index.md`/`graph.json`; `agent/lib/memory.ts`, `memory-demo.ts`, seeded `demo-room/`) against putting a **per-villager memory store under `villagers/<name>/`** instead of / alongside the per-channel `rooms/`. Question to resolve: is the community brain keyed by *channel* (current plan) or by *villager* (a store the agent owns and carries)? Then wire the chosen shape into `ingestForMemory()` (`agent/lib/memory-ingest.ts`, currently a no-op) so the villager recalls channel context. Today it only sees the current **thread** (`threadContext`), not loose top-level channel chatter.
+2. **Wire `ingestForMemory()`** (`agent/lib/memory-ingest.ts`, currently a no-op) so the villager recalls channel context beyond the current **thread** (today only `threadContext` is seen, not loose top-level chatter). Memory design is now **resolved and collapsed** (see "Resolved" below): the community brain lives in the villager's own folder at `villagers/<slug>/memory/` (one channel = one villager, so no separate `rooms/` tree). Wire the cheapest durable layer first — raw pointers, then a channel-scoped Eve `fileMemory` slot (the sandbox is not durable, so on-disk `memory/` alone won't persist runtime writes); confirmed atoms are the learning-loop step, on human confirmation, not from the passive hook.
 3. **`birth`/`commit` pipeline**: threaded interview incl. "show me an example of the input" → template-fill a villager folder → append the channel→villager entry to `agent/lib/villages.ts` → **git-commit** (sandbox is not durable; the midwife must commit). Channel is pre-created by a human (auto-create deferred — `channels:manage` not grantable).
 4. **Learning loop**: correction in thread → villager proposes a knowledge atom → human confirms → passes the fixture → committed with author's name → changes the next run.
 
@@ -47,11 +47,11 @@ Fast-moving hackathon handoff — the current state, what's next, and open decis
 
 ## Coordination with Ren (Sep 12, active)
 
-- Ren is building the **community-brain memory** under `agent/sandbox/workspace/village/rooms/` (append-only rooms, content ranking; `agent/lib/memory.ts` + `memory-demo.ts`; a `demo-room/` fixture is already merged). **Leave `rooms/` to Ren for now** — we merge his memory into the village folder after our loop is proven, then wire it into the `ingestForMemory()` seam in `agent/lib/memory-ingest.ts`.
+- Ren built the **community-brain memory** compiler (`agent/lib/memory.ts` + `memory-demo.ts` + `memory.test.ts`; append-only atoms, generated themes/index/graph, content ranking). **Merged (Sep 12):** his `demo-room/` fixture now lives at `villagers/exa-researcher/memory/` and the `rooms/` tree is gone — one channel = one villager, so memory lives in the villager's own folder. His compiler is untouched (it takes any `roomPath`); only `memory-demo.ts`'s one path line changed. Ping Ren that the fixture moved. Next: wire it into the `ingestForMemory()` seam.
 - Our side owns the midwife, the villager folders/routing, and the birth/commit pipeline (next).
 
 ## Decisions locked this session (already in the docs)
 
 - Cut the mom-test/non-developer/from-home narrative; cut science/Battelle, OpenClaw, Second Reader, PR firm/voice/CopilotKit. Focus is purely the villager-in-a-channel + midwife + community brain.
-- Git is the source of truth; villagers + community brains live under `agent/sandbox/workspace/village/` (`villagers/` + `rooms/`); `agent/` is the midwife (folder name is fixed by Eve, can't be renamed).
+- Git is the source of truth; villagers live under `agent/sandbox/workspace/village/villagers/`, each with its own community brain at `<slug>/memory/` (one channel = one villager, so no separate `rooms/` tree); `agent/` is the midwife (folder name is fixed by Eve, can't be renamed).
 - Learning is a *proposal* the villager considers saving as an atom, confirmed by a human — not an automatic permanent rule.

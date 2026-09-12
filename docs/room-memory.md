@@ -1,11 +1,13 @@
 # Room memory format — the community brain of a research villager
 
-A villager researches a question for the humans in its channel, and this is what it remembers. Everything is markdown on disk, and the room only ever grows: each search adds a trace, each sourced result adds a finding, each correction in the channel adds a rule. Implemented in `agent/lib/memory.ts`; seed a demo room with `node agent/lib/memory-demo.ts`.
+A villager researches a question for the humans in its channel, and this is what it remembers. Everything is markdown on disk, and the memory only ever grows: each search adds a trace, each sourced result adds a finding, each correction in the channel adds a rule. Implemented in `agent/lib/memory.ts`; seed a demo store with `node agent/lib/memory-demo.ts`.
 
 ## Structure
 
+One channel = one villager, so the community brain is not a separate `rooms/` tree keyed by channel id — it lives inside the villager's own folder as its `memory/` subdir (the accumulating atoms/themes/index *are* the villager's living wiki; there is no second, curated wiki). The Slack channel still selects it: `villagerForChannel(channelId)` in `agent/lib/villages.ts` gives the villager's `dir`, and the store is `<dir>/memory/`.
+
 ```
-rooms/<channel_id>/
+villagers/<slug>/memory/
   raw/<YYYY-MM-DD>.md   # append-only trace: queries, results kept, run output
   atoms/<id>.md         # one file per finding, question, or rule
   themes/<name>.md      # GENERATED — one file per theme

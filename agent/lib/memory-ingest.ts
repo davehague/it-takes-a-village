@@ -8,24 +8,29 @@
  * mention; ingestion is not. Keep this signature stable so wiring memory in
  * later does not touch the call site.
  *
- * ── How to integrate memory later (community brain = per-channel scope) ───────
+ * ── How to integrate memory later (one memory store per villager) ─────────────
  *
- * The community brain is keyed by Slack channel id. There are three layers; add
- * them in this order.
+ * One channel = one villager, so the community brain is NOT a separate `rooms/`
+ * tree keyed by channel id — it lives inside the villager's own folder at
+ * `village/villagers/<slug>/memory/`. Resolve it here by mapping the channel to
+ * its villager: `villagerForChannel(message.channelId)` from `agent/lib/villages.ts`
+ * gives `.dir`, and the store is `${villager.dir}/memory`. There are three layers;
+ * add them in this order.
  *
  * 1. RAW TRACE (cheapest, do first). Append a pointer — not a copy — for this
- *    message into the room's raw pool at
- *    `village/rooms/<channelId>/raw/`. Slack history IS the transcript, so store
- *    `{ channelId, ts, userId }`, not the text. Batch the commit (e.g. flush on
- *    a schedule or at the next birth/commit), never one git write per message.
+ *    message into the villager's raw pool at
+ *    `village/villagers/<slug>/memory/raw/`. Slack history IS the transcript, so
+ *    store `{ channelId, ts, userId }`, not the text. Batch the commit (e.g. flush
+ *    on a schedule or at the next birth/commit), never one git write per message.
  *    Use `ensureRoomStructure()` from `agent/lib/memory.ts`, which already lays
  *    out raw/ atoms/ themes/ index.md.
  *
  * 2. fileMemory (Eve built-in, Vercel Blob — runtime-mutable, survives between
- *    deploys). Declare a channel-scoped slot on the agent:
+ *    deploys). Declare a channel-scoped slot on the agent (channel = villager, so
+ *    scoping by channel id and scoping by villager are the same key):
  *      import { fileMemory } from "eve/memory/file";
  *      fileMemory({ scope: (ctx) => slackChannelIdFrom(ctx) })
- *    Eve then recalls a small per-channel document each turn and maintains it via
+ *    Eve then recalls a small per-villager document each turn and maintains it via
  *    the save_memory / remove_memory tools. This — NOT the villages registry —
  *    is the right home for accumulating brain state, because it changes at
  *    runtime, not at birth. (The registry is birth-time config and stays in git.)
@@ -33,7 +38,7 @@
  * 3. ATOMS (the learning loop; runs on human CONFIRMATION, not from here).
  *    A confirmed correction becomes an attributed atom via `createAtom` /
  *    `compileRoomMemory` in `agent/lib/memory.ts`, written under
- *    `village/rooms/<channelId>/atoms/` and committed with the author's name.
+ *    `village/villagers/<slug>/memory/atoms/` and committed with the author's name.
  *    Passive ingest (this function) only accumulates candidate context; a later
  *    "mine" step (on demand, or a scheduled batch) proposes atoms from it, and a
  *    human confirms before anything sticks.

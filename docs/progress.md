@@ -2,6 +2,14 @@
 
 Running status for It Takes a Village. Newest first. `plan.md` is the source of truth for the design; this is what is actually done, decided, blocked, and next.
 
+## Sep 12 — Memory design resolved: one folder per villager (collapsed `rooms/`)
+
+Decided and merged: the community brain is **not** a separate `rooms/<channel_id>/` tree. One channel = one villager, so `rooms/` and `villagers/` keyed the same 1:1 thing twice. Collapsed the community brain into the villager's own folder as `villagers/<slug>/memory/` — the accumulating atoms/themes/index *are* the villager's living wiki (no separate curated wiki). Merged Ren's `demo-room/` fixture into `villagers/exa-researcher/memory/`; his compiler (`agent/lib/memory.ts`, `memory.test.ts`) is untouched since `compileRoomMemory` takes any path — only `memory-demo.ts`'s one path line changed. Tests stay green (9/9); the demo regenerates at the new path. The Slack channel still selects the store via `villagerForChannel(channelId).dir` + `/memory`.
+
+### Next
+- Wire `ingestForMemory()` (still a no-op) to the villager's `memory/`: raw pointers first, then a channel-scoped Eve `fileMemory` slot for durability (the sandbox is not durable, so on-disk `memory/` alone won't hold runtime writes). Confirmed atoms are the learning-loop step, on human confirmation.
+- Build the `birth`/`commit` pipeline.
+
 ## Sep 12 — Loop works live (after a runaway-loop scare)
 
 Milestone: `@villager <question>` in `#village-exa-researcher` returns **one clean, Markdown-rendered, Exa-sourced brief** with a Confidence line. The full interpreted-villager path works end to end on `anthropic/claude-sonnet-5`.

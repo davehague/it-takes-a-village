@@ -58,7 +58,7 @@ Eve is the runtime; an agent is a directory (`instructions.md`, `agent.ts`, `too
 
 ## Repo layout
 
-One Eve app (the midwife) is the repo. Villagers and the community brain live inside the midwife's sandbox workspace, so Eve seeds them into the sandbox at runtime and git tracks them as the source of truth. They are named `villagers/` and `rooms/` (not `agents/`) to avoid confusion with Eve's own `agent/`, which is the midwife. Our `docs/` sit alongside and Eve ignores them — no mixing problem.
+One Eve app (the midwife) is the repo. Villagers live inside the midwife's sandbox workspace, so Eve seeds them into the sandbox at runtime and git tracks them as the source of truth. They are named `villagers/` (not `agents/`) to avoid confusion with Eve's own `agent/`, which is the midwife. One channel = one villager, so a villager's community brain is not a separate tree — it lives inside its own folder as a `memory/` subdir. Our `docs/` sit alongside and Eve ignores them — no mixing problem.
 
 ```
 it-takes-a-village/
@@ -75,16 +75,16 @@ it-takes-a-village/
           stages/01-<step>/fixtures/     # golden input from the interview; gate for every change
           scripts/                # deterministic, CLI-invoked, exit codes; selected from the library
           agent.ts, tools/, channels/    # the generated Eve shim (used at graduation)
-        rooms/<channel_id>/       # the COMMUNITY BRAIN — the room's living wiki, keyed by channel
-          raw/                    # pointers to channel history + run traces; append-only, never edited
-          atoms/                  # one file per fact/rule/preference; frontmatter: source, author, themes
-          themes/                 # GENERATED from atom frontmatter
-          index.md                # GENERATED map of content
+          memory/                 # the COMMUNITY BRAIN — this villager's living wiki (one channel = one villager)
+            raw/                  # pointers to channel history + run traces; append-only, never edited
+            atoms/                # one file per fact/rule/preference; frontmatter: source, author, themes
+            themes/               # GENERATED from atom frontmatter
+            index.md              # GENERATED map of content
   docs/                           # planning docs (Eve ignores these)
   package.json, tsconfig.json, AGENTS.md, CLAUDE.md
 ```
 
-Git is the source of truth: the midwife writes villager/room files in the sandbox and its `commit` tool writes them back to `agent/sandbox/workspace/village/` and git-commits, so the next session re-seeds with the change. (Build note: on Vercel the sandbox is isolated from the repo, so committing back needs the midwife to run git itself — straightforward for a local `eve dev` demo, a wrinkle to solve for graduation.)
+Git is the source of truth: the midwife writes villager files (including the villager's `memory/`) in the sandbox and its `commit` tool writes them back to `agent/sandbox/workspace/village/` and git-commits, so the next session re-seeds with the change. (Build note: on Vercel the sandbox is isolated from the repo, so committing back needs the midwife to run git itself — straightforward for a local `eve dev` demo, a wrinkle to solve for graduation.)
 
 A stage is a folder in the sandbox workspace with its own `CONTEXT.md` and `output/`; stage 2 reads stage 1's `output/`. The villager's `run_stage` tool executes stages in numbered order. Single stage today; multi-stage later.
 
