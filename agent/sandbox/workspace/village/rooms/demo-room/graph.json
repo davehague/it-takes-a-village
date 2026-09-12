@@ -1,0 +1,81 @@
+{
+  "nodes": [
+    {
+      "id": "theme:approval",
+      "type": "theme",
+      "label": "approval"
+    },
+    {
+      "id": "theme:customer_data",
+      "type": "theme",
+      "label": "customer_data"
+    },
+    {
+      "id": "theme:escalation",
+      "type": "theme",
+      "label": "escalation"
+    },
+    {
+      "id": "theme:triage",
+      "type": "theme",
+      "label": "triage"
+    },
+    {
+      "id": "theme:workflow",
+      "type": "theme",
+      "label": "workflow"
+    },
+    {
+      "id": "atom:atom-1",
+      "type": "atom",
+      "label": "When the ticket is missing the customer email, do not guess. Ask for the email first and mark the request as pending."
+    },
+    {
+      "id": "atom:atom-2",
+      "type": "atom",
+      "label": "Escalate any blocked request when the customer has not replied within 24 hours or the issue risk is high."
+    },
+    {
+      "id": "atom:atom-3",
+      "type": "atom",
+      "label": "Every workflow run should confirm the human approval before posting a side effect."
+    }
+  ],
+  "edges": [
+    {
+      "from": "theme:triage",
+      "to": "atom:atom-1",
+      "relation": "contains"
+    },
+    {
+      "from": "theme:customer_data",
+      "to": "atom:atom-1",
+      "relation": "contains"
+    },
+    {
+      "from": "theme:triage",
+      "to": "atom:atom-2",
+      "relation": "contains"
+    },
+    {
+      "from": "theme:escalation",
+      "to": "atom:atom-2",
+      "relation": "contains"
+    },
+    {
+      "from": "theme:customer_data",
+      "to": "atom:atom-2",
+      "relation": "contains"
+    },
+    {
+      "from": "theme:approval",
+      "to": "atom:atom-3",
+      "relation": "contains"
+    },
+    {
+      "from": "theme:workflow",
+      "to": "atom:atom-3",
+      "relation": "contains"
+    }
+  ]
+}

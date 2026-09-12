@@ -12,7 +12,7 @@ Fast-moving hackathon handoff — the current state, what's next, and open decis
 ## Operational reference
 
 - Repo: `github.com/davehague/it-takes-a-village` (branch `main`).
-- **Node 24 required**: prepend `~/.nvm/versions/node/v24.3.0/bin` (v22 can't run Eve).
+- **Node 24 required** (default `node` is a v22 and can't run Eve): `nvm use 24`, or `export PATH="$(ls -d ~/.nvm/versions/node/v24*/bin | tail -1):$PATH"`. Our machines have different v24 patch versions — don't pin one in the docs.
 - Live production: `https://it-takes-a-village-orpin.vercel.app` (Slack → `/eve/v1/slack`).
 - Vercel project: `dhaggerfins-projects/it-takes-a-village` (id `prj_CJB7TtPPpIyUSj21WpaMGKD13Hsi`).
 - Slack connector: `slack/it-takes-a-village` (`scl_g32hxyh1ZP4wQiV3OOLRiQ`) — `vercel connect list` to inspect.
