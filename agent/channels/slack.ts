@@ -29,20 +29,21 @@ import { villagerForChannel, type Villager } from "../lib/villages";
 /**
  * Build the framing that makes a turn act as a villager. Injected as `context`
  * so the model reads it as a leading instruction before the human's message.
+ *
+ * The base is villager-agnostic — "you are this villager, read its
+ * instructions.md and follow it, reply once in Markdown." Per-villager operational
+ * glue (a script invocation, a hard output contract) is appended from the
+ * registry's optional `framing` field, so a prose-only villager needs nothing
+ * beyond its instructions.md.
  */
-function villagerFraming(
-  villager: Villager,
-  channelId: string,
-  replyThreadTs: string,
-): string {
-  return [
+function villagerFraming(villager: Villager): string {
+  const base = [
     `You are acting AS the villager "${villager.name}" (${villager.icon}) — not as the midwife. This channel is its village.`,
     `Its folder is at ${villager.dir} in the sandbox (bash runs with cwd /workspace).`,
-    `To answer: read ${villager.dir}/instructions.md with read_file and follow it, then run its scripts with the bash tool, e.g.:`,
-    `  cd ${villager.dir} && mkdir -p stages/01-research/output && SEARCH_OUT_DIR="$(pwd)/stages/01-research/output" scripts/search.sh "<the question>"`,
-    `Then reply with the finished brief as your normal assistant message — write it in GitHub-flavored Markdown (bold, [label](url) links, - lists); it renders natively in Slack. Reply exactly once and then stop; do NOT call post_as_villager, and do NOT re-post or revise a previous answer.`,
-    `Answer only from the search results, never from memory or as the midwife: every claim cites a source, and the brief ends with a "Confidence:" line.`,
-  ].join("\n");
+    `First read ${villager.dir}/instructions.md with read_file and follow it — it is the source of truth for how this villager behaves.`,
+    `Then reply as your normal assistant message, written in GitHub-flavored Markdown (bold, [label](url) links, - lists); it renders natively in Slack. Reply exactly once and then stop; do NOT call post_as_villager, and do NOT re-post or revise a previous answer.`,
+  ];
+  return (villager.framing ? [...base, villager.framing] : base).join("\n");
 }
 
 export default slackChannel({
@@ -80,10 +81,9 @@ export default slackChannel({
       return { auth: null };
     }
 
-    const replyThreadTs = message.threadTs || message.ts;
     return {
       auth: null,
-      context: [villagerFraming(villager, message.channelId, replyThreadTs)],
+      context: [villagerFraming(villager)],
       title: `${villager.name}: ${message.text.slice(0, 60)}`,
     };
   },
@@ -127,10 +127,9 @@ export default slackChannel({
     const villager = villagerForChannel(message.channelId);
     if (!villager) return { auth: null };
 
-    const replyThreadTs = message.threadTs || message.ts;
     return {
       auth: null,
-      context: [villagerFraming(villager, message.channelId, replyThreadTs)],
+      context: [villagerFraming(villager)],
     };
   },
 });

@@ -23,6 +23,14 @@ export interface Villager {
   readonly icon: string;
   /** Path to the villager folder inside the sandbox workspace (cwd /workspace). */
   readonly dir: string;
+  /**
+   * Optional villager-specific framing appended to the generic base the Slack
+   * handler builds (see agent/channels/slack.ts). Use it for operational glue the
+   * model can't infer from instructions.md alone — the exact script invocation, or
+   * a hard output contract. Omit it for a prose-only villager whose whole behavior
+   * lives in its instructions.md.
+   */
+  readonly framing?: string;
 }
 
 /**
@@ -42,6 +50,20 @@ export const VILLAGES: Readonly<Record<string, Villager>> = {
     name: "Exa Researcher",
     icon: ":mag:",
     dir: "village/villagers/exa-researcher",
+    // Exa is script-driven: the model must run search.sh and answer only from its
+    // results. This is the operational contract the base framing can't infer.
+    framing: [
+      "To answer: read the instructions, then run its script with the bash tool, e.g.:",
+      '  cd village/villagers/exa-researcher && mkdir -p stages/01-research/output && SEARCH_OUT_DIR="$(pwd)/stages/01-research/output" scripts/search.sh "<the question>"',
+      'Answer only from the search results, never from memory or as the midwife: every claim cites a source, and the brief ends with a "Confidence:" line.',
+    ].join("\n"),
+  },
+  // #new-project-ideas — advisory, prose-only villager (no scripts).
+  C0C1A8TE605: {
+    slug: "enterprise-architect",
+    name: "Enterprise Architect",
+    icon: ":triangular_ruler:",
+    dir: "village/villagers/enterprise-architect",
   },
 };
 
