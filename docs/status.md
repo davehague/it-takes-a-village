@@ -24,7 +24,7 @@ Fast-moving hackathon handoff — the current state, what's next, and open decis
 ## Next (build)
 
 1. ~~Live-test the loop~~ **DONE** — one clean sourced reply confirmed. (Optional: decide whether to add the 🔎 per-reply face via the two-post variant.)
-2. **Merge Ren's `rooms/` memory** into the village folder, then wire it into the `ingestForMemory()` seam.
+2. **Memory design decision (David flagged for next):** analyze Ren's `rooms/<channel_id>/` format (append-only `atoms/` + generated `themes/`/`index.md`/`graph.json`; `agent/lib/memory.ts`, `memory-demo.ts`, seeded `demo-room/`) against putting a **per-villager memory store under `villagers/<name>/`** instead of / alongside the per-channel `rooms/`. Question to resolve: is the community brain keyed by *channel* (current plan) or by *villager* (a store the agent owns and carries)? Then wire the chosen shape into `ingestForMemory()` (`agent/lib/memory-ingest.ts`, currently a no-op) so the villager recalls channel context. Today it only sees the current **thread** (`threadContext`), not loose top-level channel chatter.
 3. **`birth`/`commit` pipeline**: threaded interview incl. "show me an example of the input" → template-fill a villager folder → append the channel→villager entry to `agent/lib/villages.ts` → **git-commit** (sandbox is not durable; the midwife must commit). Channel is pre-created by a human (auto-create deferred — `channels:manage` not grantable).
 4. **Learning loop**: correction in thread → villager proposes a knowledge atom → human confirms → passes the fixture → committed with author's name → changes the next run.
 
