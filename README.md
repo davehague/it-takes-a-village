@@ -46,11 +46,13 @@ A browser opens: **choose the Slack workspace** and authorize. This registers a 
 
 ## Deploy
 
+The GitHub repo is connected to the Vercel project, so **pushing to `main` auto-redeploys production**. For a manual deploy:
+
 ```bash
 vercel deploy --prod --yes   # deploy the midwife to production
 ```
 
-Note: `eve deploy` currently force-appends an invalid `--non-interactive` flag to its bundled Vercel CLI (v50.9.6) and fails — use `vercel deploy --prod` directly until that is fixed. `AI_GATEWAY_API_KEY` must be set in the Vercel project's **Production** environment for the deployment to make model calls (`vercel env add AI_GATEWAY_API_KEY production`).
+Note: `eve deploy` currently force-appends an invalid `--non-interactive` flag to its bundled Vercel CLI (v50.9.6) and fails — use a push or `vercel deploy --prod` instead. `AI_GATEWAY_API_KEY` must be set in the Vercel project's **Production** environment for the deployment to make model calls (`vercel env add AI_GATEWAY_API_KEY production`).
 
 Live production: `https://it-takes-a-village-orpin.vercel.app` — Slack events arrive at `/eve/v1/slack`.
 
