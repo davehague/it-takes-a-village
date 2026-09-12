@@ -80,8 +80,25 @@ export default slackChannel({
   },
 
   async onMessage(ctx: SlackInboundMessageContext, message: SlackMessage) {
+    // CRITICAL: never react to bot-authored messages — including this app's own
+    // villager posts. `post_as_villager` posts with a custom username, which
+    // Eve's built-in self-message filter does NOT recognize as the app's own, so
+    // without this guard every villager reply re-triggers onMessage on the
+    // subscribed thread and the villager posts in a runaway loop. Humans are not
+    // bots, so this only silences bot/self chatter. Belt-and-suspenders: a
+    // username-customized post arrives as a `bot_message` with a `bot_id`, so we
+    // check the raw event too in case `author.isBot` is not set on that subtype.
+    const raw = message.raw as { bot_id?: unknown; subtype?: unknown };
+    if (
+      message.author?.isBot ||
+      typeof raw.bot_id === "string" ||
+      raw.subtype === "bot_message"
+    ) {
+      return null;
+    }
+
     // Listen: every human message is a memory-ingest opportunity, whether or not
-    // we reply. (Eve already drops the app's own messages before this runs.)
+    // we reply.
     await ingestForMemory({
       channelId: message.channelId,
       userId: message.author?.userId,

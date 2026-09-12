@@ -34,7 +34,9 @@ export default defineTool({
     text: z
       .string()
       .min(1)
-      .describe("Message body, written in Slack mrkdwn."),
+      .describe(
+        "Message body, written in Markdown (GitHub-flavored: **bold**, [label](url), - lists, headings). Rendered natively in Slack via the markdown_text field.",
+      ),
     iconEmoji: z
       .string()
       .optional()
@@ -61,9 +63,13 @@ export default defineTool({
       botToken: credentials.botToken,
       context: { teamId },
       operation: "chat.postMessage",
+      // Slack's `markdown_text` field renders GitHub-flavored Markdown
+      // (bold, links, lists, headings) natively. It is mutually exclusive
+      // with `text` and `blocks` on chat.postMessage (confirmed in Eve's
+      // bundled Slack adapter types), so we send markdown_text only.
       body: {
         channel,
-        text,
+        markdown_text: text,
         username: villagerName,
         ...(iconEmoji ? { icon_emoji: iconEmoji } : {}),
         ...(threadTs ? { thread_ts: threadTs } : {}),
