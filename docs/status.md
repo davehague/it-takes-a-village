@@ -1,8 +1,8 @@
-# Status & handoff (live)
+# Status (live)
 
-Fast-moving hackathon handoff — the current state, what's next, and open decisions. Updated Sep 13. `docs/plan.md` is the source of truth for the design; this file is "where are we right now." Keep it short and current.
+The current state, what's next, and open decisions. Updated Sep 13 2026. `docs/plan.md` is the design doc; this file is "where are we right now." Keep it short and current.
 
-> **Video: DONE and SUBMITTED (Sep 12).** The 2-minute video is complete and submitted. Remaining work is feature quality (the learning loop), not the deadline.
+> **The project is running in production.** It began at the AI Tinkerers Columbus hackathon (Sep 12–13 2026) — the 2-minute origin video was recorded and submitted there — and continues as a living open-source project. Remaining work is feature quality and the roadmap in `docs/future.md`, not a deadline.
 
 ## Current state — the full loop WORKS LIVE, including durable learning ✅
 
@@ -40,7 +40,7 @@ Fast-moving hackathon handoff — the current state, what's next, and open decis
 ## Open decisions (waiting on David)
 
 - **Enable `message.channels` on the Connect trigger** (Advanced → Trigger Event Types) so in-thread corrections without a re-mention reach `onMessage`. @mentions already work without it.
-- **`/project-status`** update — worth offering once the loop is proven live (crosses prototype→running).
+- ~~**`/project-status`** update — worth offering once the loop is proven live~~ **DONE (Sep 13):** the project-status card marks it Running, and the repo docs were reframed hackathon → living project.
 - **`/shelloverflow`** post — the persona-in-one-app + sandbox credential-brokering findings are genuinely novel; offer at a good commit.
 
 ## Resolved (was open)

@@ -1,12 +1,10 @@
-# It Takes a Village — Hackathon Plan (Agents, Everywhere, Columbus, Sep 12 2026)
+# It Takes a Village — Design & Architecture
 
-Product name: **It Takes a Village**. The channel is the village, the midwife delivers, the room parents. This is the single design for the hackathon: a **villager** agent that lives in a Slack channel with multiple humans, plus the **midwife** that births it and the **brains** (memory) it learns into. Event facts, schedule, judging criteria, prizes, and submission rules live in the event materials and aren't repeated here.
+Product name: **It Takes a Village**. The channel is the village, the midwife delivers, the room parents. This is the design doc — the architecture and the reasoning behind it. The core: a **villager** agent that lives in a Slack channel with multiple humans, plus the **midwife** that births it and the **brains** (memory) it learns into. For current state and what's next, see `docs/status.md`; for the deferred/roadmap scope, `docs/future.md`.
 
-Team: David and Ren. Whiteboard photos are in `docs/whiteboard/`; the deploy-and-brains board is written up in `docs/architecture-deploy-and-brains.md`. Eve framework verification is in `docs/eve-verification.md`.
+Origin: built at the AI Tinkerers Columbus hackathon ("Agents, Everywhere", Sep 12–13 2026) and now a living open-source project. Team: David and Ren. Whiteboard photos are in `docs/whiteboard/`; the deploy-and-brains board is written up in `docs/architecture-deploy-and-brains.md`. Eve framework verification is in `docs/eve-verification.md`.
 
 Glossary: the **midwife** is the host agent that creates, updates, tests, and commits villagers. The **villager** is the daily agent that works a workflow with the humans in its channel. The **village** is the channel. Both are Eve-framework agents. Two phases: **Create** — humans ↔ midwife → villager folder → committed and deployed; **Run** — the humans in the channel ↔ villager ↔ brains (memory).
-
-Hard constraints: build window 11:15–3:30, submission by 5:00 PM EDT, judged off a public GitHub repo plus a 2-minute video. Core functionality is built live; templates, the script library, and seed data may be prepared beforehand.
 
 ## The design, in one paragraph
 
@@ -18,7 +16,7 @@ The channel is the product. Multiple humans witness the villager work, correct i
 
 ## Architecture: interpreted while learning, git as source of truth
 
-One Eve host agent (the midwife) with a sandbox. Each birthed villager is a folder committed to the git repo and seeded into the midwife's sandbox workspace. While young, the midwife interprets it: loads its `instructions.md`, runs its scripts in the sandbox, and posts to Slack under the villager's own name. **Git is the source of truth for a villager's *code*** (`instructions.md`, scripts) — the sandbox is stateless hands and is not durable, so a code change has to reach the repo (verified: Eve does not sync sandbox writes to git for us — see `docs/eve-verification.md`). **Runtime memory is different (Sep 13, [ADR 0003](adrs/0003-memory-substrate-blob-live-git-snapshot.md)):** learned atoms live in **Vercel Blob** (the live store, cheap writes, no redeploy) and are snapshotted to a `village-memory` git branch as the public record — so git is the source of truth for the *published* memory record, Blob for *live* memory between snapshots. Every villager folder is a valid Eve agent directory, so graduation to its own deployment is `eve deploy` from that folder — same artifact, two execution modes. Graduation is a stretch beat.
+One Eve host agent (the midwife) with a sandbox. Each birthed villager is a folder committed to the git repo and seeded into the midwife's sandbox workspace. While young, the midwife interprets it: loads its `instructions.md`, runs its scripts in the sandbox, and posts to Slack under the villager's own name. **Git is the source of truth for a villager's *code*** (`instructions.md`, scripts) — the sandbox is stateless hands and is not durable, so a code change has to reach the repo (verified: Eve does not sync sandbox writes to git for us — see `docs/eve-verification.md`). **Runtime memory is different (Sep 13, [ADR 0003](adrs/0003-memory-substrate-blob-live-git-snapshot.md)):** learned atoms live in **Vercel Blob** (the live store, cheap writes, no redeploy) and are snapshotted to a `village-memory` git branch as the public record — so git is the source of truth for the *published* memory record, Blob for *live* memory between snapshots. Every villager folder is a valid Eve agent directory, so graduation to its own deployment is `eve deploy` from that folder — same artifact, two execution modes. Graduation is a roadmap item (`docs/future.md`).
 
 The 90/10 rule: the villager folder is ~90% harness-agnostic (markdown instructions, stages, CLI scripts, the wiki) and ~10% generated Eve shim (`agent.ts`, `tools/`, `channels/`). Portability is the point — harnesses keep improving; we bring the folder.
 
@@ -99,36 +97,25 @@ Deferred to `docs/future.md`: `dm/<user_id>/` personal pools (kept gitignored), 
 3. Evaluation, not versioning. Git versions text; "was version N+1 better" has no benchmark in a team — the eval signal is humans in the channel plus deterministic scripts with exit codes. Wiki append-only; instructions and scripts versioned and rollback-able.
 4. Slack steers, git holds. Slack is not an editor: it watches runs, adds context, and approves. The midwife edits by proposing a patch, posting the diff, and committing on approval.
 
-## Demo plan
+## The reference villager: Exa Researcher
 
-The filmed loop is small: **interview → birth → run → correct → rerun.** Privacy: the repo, video, and post are public — fictional names and synthetic data only.
+The first villager and the canonical walk-through of the whole loop: **interview → birth → run → correct → rerun.** Privacy: the repo, the demo channels, and the origin video are public — fictional names and synthetic data only.
 
-**DECIDED — the demo workflow is an Exa-powered Researcher villager.** A human posts a research question in the channel; the villager runs a real web search (Exa) and posts a short, *sourced* brief ending with a Confidence line. Corrections tune its research taste — "exclude vendor blogs", "only sources from the last 12 months", "always name the primary source" — which map to deterministic search params and required brief sections, so a confirmed correction changes the next run and the fixture can assert it offline. No external OAuth (Exa is an API key), naturally multiplayer, and it showcases the hackathon's $50 Exa credits. Read-only by nature — no risky writes on camera. Live-call risk is de-risked by caching results to a fixture so a filmed rerun is deterministic.
+**The workflow is an Exa-powered Researcher villager.** A human posts a research question in the channel; the villager runs a real web search (Exa) and posts a short, *sourced* brief ending with a Confidence line. Corrections tune its research taste — "exclude vendor blogs", "only sources from the last 12 months", "always name the primary source" — which map to deterministic search params and required brief sections, so a correction changes the next run and the fixture can assert it offline. No external OAuth (Exa is an API key), naturally multiplayer, and read-only by nature — no risky writes. Results cache to a fixture so a rerun is deterministic.
 
-Storyboard (2:00): 0:00–0:40 birth by interview, ending with the midwife announcing the villager in its (human-pre-created) channel under its own name and face; 0:40–1:40 `@villager <research question>` → a sourced brief → a human corrects its taste in-thread (e.g. "exclude vendor blogs") → the villager records the rule as an attributed atom then and there (autonomous, no confirmation gate — Sep 12 pivot) → a rerun (or a new thread) follows the new rule; 1:40–2:00 open the villager folder to show it's readable and editable, and — if built — the `eve deploy` graduation with the Vercel dashboard as proof.
+The 2-minute origin video walking this loop is planned in `docs/video-plan.md`.
 
-## Scope: core / stretch / plan B
+## Design principles that hold
 
-Core (~3h): the **midwife** (interview including the fixture question → template fill → folder committed → channel created → villager announces itself under its own name); the **run loop**, single stage (execute the villager's scripts in the sandbox, post the result); the **minimal learning loop** (a correction in a thread becomes one attributed rule that passes the fixture and changes the next run). Tools: the villager gets `run_stage` and `post`; the midwife gets `birth`, `maintain`, `propose`, `run_fixtures`, `commit`. Approver allowlist for the demo is the birthing user; channel-wide later.
+- **Compose, don't generate.** The birth interview fills a template folder in one LLM pass and selects and parameterizes scripts from a small pre-written library — selected scripts can't hallucinate. Novel script generation is a later step (`docs/future.md`).
+- **Determinism beats non-determinism.** Scripts do the work with exit codes; the model only picks the script and parameters. Judgment steps (summarize, classify, draft) are the only places the model writes output itself.
+- **Separate execution from modification.** A villager executes and can propose, but the midwife (alloparent) commits code changes. A villager autonomously manages its own **memory** (atoms) but never rewrites its own **code** (instructions/scripts).
+- **Fixtures are the eval.** One golden input per workflow, captured at birth; every proposed change to instructions or scripts must pass the fixture before commit.
 
-De-risking the birth: **compose, don't generate.** The interview (5–6 questions) fills a template folder in one LLM pass and selects and parameterizes scripts from a small pre-written library. Selected scripts can't hallucinate. Novel script generation is v2.
+## Status and roadmap
 
-Stretch, in order: `eve deploy` graduation (~20 min); the fuller memory internals (generated themes/index, sliding window, compile-to-skills at graduation). Larger deferred scope — the personal/DM brain, promotion between pools, the org pool — is parked in `docs/future.md`.
+The full birth → run → learn → maintain loop runs in production today (no human touching git for births or edits; durable cross-thread learning). Current state and open decisions live in `docs/status.md`; the forward roadmap and deferred scope (graduation via `eve deploy`, multi-stage villagers, novel script generation, the DM/personal and org brains, a read-only UI) live in `docs/future.md`.
 
-Plan B, triggered if the midwife isn't working by 1:45: hand-write one villager folder and demo the learning loop. Still a submission, still the folder thesis, just without the live birth.
+## Positioning
 
-## Build-day timeline (11:15–3:30)
-
-0:00–0:30 — Eve Slack agent deployed to Vercel, hello-world `@mention` round-trip. **✅ DONE**. 0:30–1:30 — midwife: interview → template fill → folder committed → birth announced. *Birth/commit tool still to build; the villager folder, `post_as_villager`, and the channel-routed run loop are **✅ DONE** and deployed.* 1:30–2:15 — run loop, single stage. **✅ built (Exa Researcher via channel routing) — pending live verification.** 2:15–3:00 — learning loop: correction → attributed atom → rerun. **✅ DONE + verified live (Sep 13):** the villager records an attributed atom autonomously (`record_atom` → Vercel Blob), and a *new thread* obeys the taught rule — durable across threads/redeploys via Blob ([ADR 0003](adrs/0003-memory-substrate-blob-live-git-snapshot.md)); no confirmation gate. 3:00–3:30 — record the video. Then stretch items in order. Submission window is 3:30–4:00; the video is the submission.
-
-## Prep (allowed: templates, libraries, components, data — the midwife and loop are built live)
-
-1. Eve Slack agent deployed to Vercel; hello-world `@mention` works.
-2. Slack workspace and app with scopes (`chat:write`, `chat:write.customize`, `channels:manage`, `channels:read`, `channels:history`, `reactions:read`, `app_mentions:read`, `users:read`, `im:history`, `im:write`).
-3. Script library for the chosen demo workflow; deterministic, exit codes, with a fixture each.
-4. Compaction routine as a standalone script that takes a pool path (Plan A's stretch, Plan B's core).
-5. Repo scaffold plus the template villager folder with a fixture, so the gate has something to run on day one.
-
-## Competition note
-
-Multiplayer AI inside the messaging platform exists (e.g. Dust); one-click "add to Slack" agent builders exist. Not found anywhere: birthing the agent from inside the channel by interview, as a readable folder the team can open and edit, with a public learning loop the channel watches. The differentiator is legibility plus shared learning, not "an agent in Slack." Directionally right, not an exhaustive audit.
+Multiplayer AI inside the messaging platform exists (e.g. Dust); one-click "add to Slack" agent builders exist. What's distinctive here: birthing the agent from inside the channel by interview, as a readable folder the team can open and edit, with a public learning loop the channel watches. The differentiator is legibility plus shared learning, not "an agent in Slack." Directionally right, not an exhaustive audit.

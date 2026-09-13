@@ -1,6 +1,10 @@
 # Progress log
 
-Running status for It Takes a Village. Newest first. `plan.md` is the source of truth for the design; this is what is actually done, decided, blocked, and next.
+Running status for It Takes a Village. Newest first. `plan.md` is the design doc; this is what is actually done, decided, blocked, and next.
+
+## Sep 13 — Hackathon → living project; docs reframed
+
+The hackathon build carried through the full birth → run → learn → maintain loop in production, so the project graduated from "hackathon submission" to a living open-source project. Reframed the doc set off the deadline/build-day framing: `CLAUDE.md` and `README.md` now lead with the pattern (agents born/run/taught in public; the folder is the asset) and the open-source direction; `plan.md` retitled from "Hackathon Plan" to the design doc, with the build-day timeline, Plan B, "scope for today", and prep sections replaced by design principles + a status/roadmap pointer; `status.md`, `future.md`, and this log de-hackathonized. Origin (AI Tinkerers Columbus, Sep 12–13 2026) kept as a one-line provenance note throughout. No code change.
 
 ## Sep 13 — Atom permanence: memory moved to Blob + git snapshot; durable learning verified LIVE
 

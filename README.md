@@ -1,8 +1,10 @@
 # It Takes a Village
 
-A midwife agent that interviews a human in Slack and births a **villager** agent — a readable folder of instructions, deterministic scripts, a fixture, and a wiki — into its own channel, where the team teaches it in public. Built on Vercel's [Eve](https://eve.dev) framework for the AI Tinkerers Columbus hackathon.
+**Agents that are born, run, and taught in public.** A midwife agent interviews a human in Slack and births a **villager** agent — a readable folder of instructions, deterministic scripts, a fixture, and a wiki — into its own channel, where the whole team teaches it. Corrections from anyone in the channel become attributed knowledge atoms the villager curates itself and carries into its next run. The bet: the knowledge is the asset and the runtime is interchangeable — a villager is a folder you can open, read, edit, and move to any harness, not a black box.
 
-**Start with [`docs/plan.md`](docs/plan.md)** — it is the source of truth. Framework findings are in [`docs/eve-verification.md`](docs/eve-verification.md); deferred scope in [`docs/future.md`](docs/future.md).
+Built on Vercel's [Eve](https://eve.dev) framework. It began as a build at the AI Tinkerers Columbus hackathon ("Agents, Everywhere", Sep 12–13 2026) and is now a living open-source project — running in production, with the full birth → run → learn → maintain loop working live (no human touching git for births or edits).
+
+**Design doc: [`docs/plan.md`](docs/plan.md)** — the architecture and the reasoning behind it. Current state and what's next: [`docs/status.md`](docs/status.md). Eve framework findings: [`docs/eve-verification.md`](docs/eve-verification.md). Roadmap / deferred scope: [`docs/future.md`](docs/future.md). Decision records: [`docs/adrs/`](docs/adrs).
 
 ## Prerequisites
 
@@ -25,7 +27,7 @@ eve link --project it-takes-a-village   # links to Vercel and writes VERCEL_OIDC
 | `VERCEL_OIDC_TOKEN` | Fallback AI Gateway credential, auto-written by `eve link`. Short-lived; re-run `eve link` to refresh. | Automatic. |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob store token — the live memory store where villagers' learned atoms persist across threads/redeploys ([ADR 0003](docs/adrs/0003-memory-substrate-blob-live-git-snapshot.md)). | `vercel blob create-store village-memory --access public` (writes it to `.env.local` and connects it to all envs). |
 | `GITHUB_TOKEN` | Repo-scoped token the midwife's git tools use: `snapshot_memory` commits a villager's memory folder to the `village-memory` branch; `birth_villager` / `update_villager` commit villager code + the registry to `main`; `read_villager_file` / `list_villagers` read from `main`. All via the GitHub API. App env only — never commit a real value. | Fine-grained PAT at github.com → Settings → Developer settings, scoped to this repo with **Contents: Read and write**. |
-| `GITHUB_REPO`, `GITHUB_MEMORY_BRANCH` | Snapshot target (default `davehague/it-takes-a-village` and `village-memory`). Optional — the code defaults cover the hackathon repo. | Set only to override the defaults. |
+| `GITHUB_REPO`, `GITHUB_MEMORY_BRANCH` | Snapshot target (default `davehague/it-takes-a-village` and `village-memory`). Optional — the code defaults cover this repo. | Set only to override the defaults. |
 | `GITHUB_MAIN_BRANCH` | Branch births and villager edits commit to and read from (default `main`; code changes need the redeploy). | Set only to override the default. |
 
 **Model note:** the repo uses `anthropic/claude-sonnet-5` via the Vercel AI Gateway (set in `agent/agent.ts`). Premium models (OpenAI and Anthropic) require **AI Gateway credits** — add them in the Vercel dashboard → AI Gateway → Budgets & Spend. A *budget* alone is only a spend cap, not funds; without credits, premium models return `403 "Free tier users do not have access to this model"`. Free ($0) models such as `inclusionai/ling-3.0-flash-fin-free` work without credits. Change the model in `agent/agent.ts` or with `eve set --model <provider/model-id>`.
@@ -66,5 +68,5 @@ Live production: `https://it-takes-a-village-orpin.vercel.app` — Slack events 
 - `agent/channels/slack.ts` — the listen/run loop: resolves the villager by channel and frames the turn; listens on every message, acts only when addressed.
 - `agent/lib/villages.ts` — loads the channel→villager registry (birth-time config, in git). `villages.json` — the registry data itself, at the repo root (Eve rejects JSON under `agent/`); each entry has a slug, name, icon, folder, one-line `description`, and optional `framing`. `agent/lib/birth.ts` / `maintain.ts` / `roster.ts` — the pure halves of the midwife's `birth_villager`, `update_villager`, and `list_villagers` tools (`agent/tools/`); `agent/lib/github-commit.ts` / `github-read.ts` — the GitHub API git path (pinned-head commits). `agent/lib/memory-ingest.ts` — the memory-ingestion seam (no-op; integration notes inside).
 - `agent/sandbox/sandbox.ts` — seeds the village into `/workspace` and brokers the Exa key at the firewall.
-- `agent/sandbox/workspace/village/` — birthed villagers (`villagers/`, e.g. `exa-researcher/`) and community brains (`rooms/`), git-tracked as the source of truth (see `docs/plan.md`).
+- `agent/sandbox/workspace/village/villagers/` — birthed villagers (e.g. `exa-researcher/`), git-tracked as the source of truth for villager *code*. Each villager's community brain lives inside its own folder as `memory/` (one channel = one villager). Learned atoms persist live in **Vercel Blob** and are snapshotted to a `village-memory` git branch as the public record ([ADR 0003](docs/adrs/0003-memory-substrate-blob-live-git-snapshot.md)).
 - `docs/` — planning docs (Eve ignores these). Start with `docs/status.md` for current state.
