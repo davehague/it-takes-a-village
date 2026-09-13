@@ -4,7 +4,7 @@ Hackathon build (AI Tinkerers Columbus, "Agents, Everywhere", Sep 12 2026). A **
 
 **Status (Sep 12):** the interpreted-villager loop WORKS LIVE — `@villager <question>` in `#village-exa-researcher` returns one clean, Markdown-rendered, Exa-sourced brief. One app (renamed `@villager`) plays two roles by channel — midwife in `#villager-management`, the first villager **Exa Researcher** 🔎 in `#village-exa-researcher`. Model `anthropic/claude-sonnet-5`. Reply mechanism is Option A (the model replies as its normal message, which Eve renders as Markdown), so run replies show the app name "villager"; the birth announcement introduces the per-villager name/face via `post_as_villager`. Acts only on explicit mention (anti-loop). Live: `https://it-takes-a-village-orpin.vercel.app`. Next: merge Ren's `rooms/` memory, build the `birth`/`commit` pipeline.
 
-**Read `docs/plan.md` first — it is the source of truth.** Whiteboard photos are in `docs/whiteboard/`; the deploy-and-brains board is written up in `docs/architecture-deploy-and-brains.md`. Eve framework verification is in `docs/eve-verification.md`.
+**Read `docs/plan.md` first — it is the source of truth.** Whiteboard photos are in `docs/whiteboard/`; the deploy-and-brains board is written up in `docs/architecture-deploy-and-brains.md`. Eve framework verification is in `docs/eve-verification.md`. Decision records are in `docs/adrs/` (0001 = knowledge-ingestion model; 0002 = deferred thread-vs-channel scope).
 
 Eve's authoring guidance for coding agents (how to build tools, channels, connections; read `node_modules/eve/docs` first) lives in `AGENTS.md`, imported here:
 

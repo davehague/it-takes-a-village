@@ -2,6 +2,10 @@
 
 Running status for It Takes a Village. Newest first. `plan.md` is the source of truth for the design; this is what is actually done, decided, blocked, and next.
 
+## Sep 12 — Knowledge-ingestion model locked (ADR 0001); scope deferred (ADR 0002)
+
+Worked through the ingestion model carefully — the collection/non-collection boundary is the quality-critical part of "learn in public". Recorded it as `docs/adrs/0001-knowledge-ingestion-model.md` (Accepted). Five-stage pipeline (context → capture → extract → store → recall). Decisions: (1) extraction runs **end-of-turn over a per-thread watermark** — timely, cheap, idempotent, learns from all human parties in the thread; (2) **human-only sourcing** with a cited-web-results exception — the villager never learns from its own prose; (3) **judgment over keywords**, with "nothing worth saving" a valid outcome to prevent over-collection; (4) **supersession** (`supersedes: <id>`) so updated rules replace stale ones instead of piling up. Deferred in `docs/adrs/0002-memory-scope-thread-vs-channel.md`: thread-vs-channel scope and the mention-per-thread interaction model (David flagged thread-based tagging as not his favorite; revisit deliberately). Source-of-truth docs updated to point at the ADRs (`plan.md`, `status.md`).
+
 ## Sep 12 — Video submitted; learning-loop design settled (autonomous, no confirmation)
 
 **The 2-minute video is complete and submitted.** Remaining work is feature quality, not deadline.
