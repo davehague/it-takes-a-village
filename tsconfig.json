@@ -4,6 +4,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "types": ["node", "eve/workflow-modules"],
     "strict": true,
     "esModuleInterop": true,

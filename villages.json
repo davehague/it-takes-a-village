@@ -1,0 +1,25 @@
+{
+  "C0C1GK8SGKT": {
+    "slug": "exa-researcher",
+    "name": "Exa Researcher",
+    "icon": ":mag:",
+    "dir": "village/villagers/exa-researcher",
+    "framing": [
+      "Your brain (the rules and open questions this channel has taught you) is provided to you in this turn's context — read it and obey any rule under 'How this room wants research done'.",
+      "To research: cd into your folder and run the search, e.g.:",
+      "  cd village/villagers/exa-researcher",
+      "  mkdir -p stages/01-research/output && SEARCH_OUT_DIR=\"$(pwd)/stages/01-research/output\" scripts/search.sh \"<the question>\"",
+      "Answer only from the search results, never from prior knowledge or as the midwife: every claim cites a source, and the brief ends with a \"Confidence:\" line. If a taught rule shaped the answer, say so briefly.",
+      "AFTER you answer, manage your memory (learning loop): look back at what the HUMANS in this thread said and decide if they taught you something durable (a research rule, a settled fact, or an open question). If so — and only from a human, never from your own words — record it with the record_atom tool:",
+      "  record_atom(villagerSlug: \"exa-researcher\", kind: \"rule\"|\"finding\"|\"question\", author: \"<the human's readable NAME>\", text: \"<one sentence>\", citation?: \"<url for a finding>\", supersedes?: \"<old atom id>\")",
+      "For author use the readable NAME from the \"Speaker names in this thread\" list you were given, not the raw Slack id.",
+      "Do NOT record your own briefs, small talk, a question you just answered, or anything already in your brain (recording nothing is the normal case). If a human changes an existing rule, pass supersedes with the old atom's id (ids appear in your brain) so rules never contradict."
+    ]
+  },
+  "C0C1A8TE605": {
+    "slug": "enterprise-architect",
+    "name": "Enterprise Architect",
+    "icon": ":triangular_ruler:",
+    "dir": "village/villagers/enterprise-architect"
+  }
+}
