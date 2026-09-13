@@ -26,6 +26,7 @@ scripts/record-atom.mjs --kind rule|finding|question --author "<the human who sa
 Rules for what I do and don't record — I try hard to get this right, both the collecting and the not-collecting:
 
 - **Only from humans.** I never record my own words as knowledge. My briefs and messages are not facts to learn from — only what a person in the channel tells me is. (A finding I record must carry a `--citation` to a real source I found, never "because I said so".)
+- **Attribute by name.** I'm given a "Speaker names in this thread" list mapping Slack ids to readable names. I set `--author` to the person's name (e.g. "David Hague"), never the raw `U…` id.
 - **Only durable, general things.** A correction, a standing preference, a settled fact, a real open question. Not one-off small talk, not a question I just answered, not a restatement of something already in my brain.
 - **Don't repeat myself.** Before recording, I check `memory/index.md`. If the rule is already there, I don't add it again (the script also refuses exact duplicates). "Nothing here is worth saving" is a perfectly normal outcome — most messages teach me nothing.
 - **Supersede, don't pile up.** If a human *changes* an existing rule ("make it 18 months, not 12"), I record the new rule with `--supersedes <the old atom's id>` (I can see the ids in `memory/atoms/`), so my brain never holds two rules that contradict each other.

@@ -46,6 +46,68 @@ function villagerFraming(villager: Villager): string {
   return (villager.framing ? [...base, villager.framing] : base).join("\n");
 }
 
+/**
+ * Resolve Slack user ids in this thread to readable display names.
+ *
+ * Eve attaches only the raw Slack user id to each message (no profile lookup by
+ * design), so a villager sees "U0C0..." and would attribute a learned atom to
+ * that id — useless for a "who taught what" wiki. We resolve names once here
+ * (in the app runtime, where a Slack call is possible; the sandbox can't reach
+ * Slack) and inject a speaker map so the villager attributes to the name.
+ *
+ * Cached per process — one `users.info` per new person, not per turn. Best
+ * effort: any failure yields no map line rather than breaking the reply.
+ */
+const speakerNameCache = new Map<string, string>();
+
+async function speakerMapFraming(
+  ctx: SlackInboundMessageContext,
+  message: SlackMessage,
+): Promise<string | null> {
+  const ids = new Set<string>();
+  if (message.author?.userId) ids.add(message.author.userId);
+  try {
+    for (const id of await ctx.thread.listParticipants()) ids.add(id);
+  } catch {
+    // listParticipants failed (scope/network) — fall back to just the sender.
+  }
+
+  for (const id of ids) {
+    if (speakerNameCache.has(id)) continue;
+    try {
+      const res = (await ctx.slack.request("users.info", { user: id })) as {
+        ok?: boolean;
+        user?: { name?: string; profile?: { display_name?: string; real_name?: string } };
+      };
+      const p = res.user?.profile;
+      const name = p?.display_name || p?.real_name || res.user?.name;
+      if (res.ok && name) speakerNameCache.set(id, name);
+    } catch {
+      // Leave this id unresolved; the villager falls back to the id for it.
+    }
+  }
+
+  const lines = [...ids]
+    .filter((id) => speakerNameCache.has(id))
+    .map((id) => `- ${id} = ${speakerNameCache.get(id)}`);
+  if (lines.length === 0) return null;
+
+  return [
+    "Speaker names in this thread — when you attribute a knowledge atom (record-atom --author) or refer to who said something, use the readable NAME below, never the raw Slack id:",
+    ...lines,
+  ].join("\n");
+}
+
+/** Build the context messages for a villager turn: framing + the speaker map. */
+async function villagerContext(
+  ctx: SlackInboundMessageContext,
+  message: SlackMessage,
+  villager: Villager,
+): Promise<string[]> {
+  const speakers = await speakerMapFraming(ctx, message);
+  return speakers ? [villagerFraming(villager), speakers] : [villagerFraming(villager)];
+}
+
 export default slackChannel({
   credentials: connectSlackCredentials(
     process.env.SLACK_CONNECTOR ?? "slack/it-takes-a-village",
@@ -83,7 +145,7 @@ export default slackChannel({
 
     return {
       auth: null,
-      context: [villagerFraming(villager)],
+      context: await villagerContext(ctx, message, villager),
       title: `${villager.name}: ${message.text.slice(0, 60)}`,
     };
   },
@@ -129,7 +191,7 @@ export default slackChannel({
 
     return {
       auth: null,
-      context: [villagerFraming(villager)],
+      context: await villagerContext(ctx, message, villager),
     };
   },
 });
