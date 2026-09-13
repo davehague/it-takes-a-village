@@ -4,3 +4,4 @@ Short, dated records of decisions that shape the system, in [Nygard format](http
 
 - [0001 — Knowledge ingestion model](0001-knowledge-ingestion-model.md) — Accepted. How channel conversation becomes attributed memory atoms: end-of-turn extraction over a watermark window, human-only sourcing, supersession.
 - [0002 — Memory & interaction scope: thread vs channel](0002-memory-scope-thread-vs-channel.md) — Deferred. Whether the villager should see/learn at channel scope and whether mention-per-thread is the right interaction model.
+- [0003 — Memory substrate: Blob live, git snapshot](0003-memory-substrate-blob-live-git-snapshot.md) — Accepted. Where memory lives: Vercel Blob is the live runtime store (cheap writes, no redeploy), git is the periodically-snapshotted public record; atoms are written by an app-runtime `record_atom` tool (C1), not an in-sandbox script.

@@ -143,6 +143,23 @@ test("ensureRoomStructure leaves a compiled room intact", async () => {
   await rm(roomPath, { recursive: true, force: true });
 });
 
+test("readAtoms drops atoms marked superseded_by", async () => {
+  const roomPath = await room();
+  await compileRoomMemory(roomPath, [
+    { id: "old", author: "ren", source: "slack", kind: "rule", text: "Only the last 12 months." },
+  ]);
+  // Manually mark it superseded, as record-atom does.
+  const p = join(roomPath, "atoms", "old.md");
+  const raw = await readFile(p, "utf8");
+  const fs = await import("node:fs/promises");
+  await fs.writeFile(p, raw.replace(/^(---\n[\s\S]*?)(\n---)/m, "$1\nsuperseded_by: new$2"), "utf8");
+
+  const atoms = await readAtoms(roomPath);
+  assert.equal(atoms.find((a) => a.id === "old"), undefined);
+
+  await rm(roomPath, { recursive: true, force: true });
+});
+
 test("atom ids from chat text cannot escape the atoms directory", async () => {
   const roomPath = await room();
 

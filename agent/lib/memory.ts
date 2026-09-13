@@ -273,6 +273,10 @@ export async function readAtoms(roomPath: string): Promise<MemoryAtom[]> {
       if (evidence.length === 0) return null;
 
       const { scalars, lists } = parseFrontmatter(frontmatter);
+      // An atom a newer one superseded is no longer active — drop it so the
+      // canonical compile matches the villager's live index (record-atom marks
+      // the old atom `superseded_by: <newid>`; see agent/lib/record-atom.ts).
+      if (scalars.superseded_by) return null;
       const themes = lists.themes?.length ? lists.themes : inferThemes(evidence);
       const kind = scalars.kind as AtomKind | undefined;
 
