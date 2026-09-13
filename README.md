@@ -26,6 +26,7 @@ eve link --project it-takes-a-village   # links to Vercel and writes VERCEL_OIDC
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob store token — the live memory store where villagers' learned atoms persist across threads/redeploys ([ADR 0003](docs/adrs/0003-memory-substrate-blob-live-git-snapshot.md)). | `vercel blob create-store village-memory --access public` (writes it to `.env.local` and connects it to all envs). |
 | `GITHUB_TOKEN` | Repo-scoped token the `snapshot_memory` tool uses to commit a villager's memory folder to the `village-memory` branch via the GitHub Git Data API. App env only — never commit a real value. | Fine-grained PAT at github.com → Settings → Developer settings, scoped to this repo with **Contents: Read and write**. |
 | `GITHUB_REPO`, `GITHUB_MEMORY_BRANCH` | Snapshot target (default `davehague/it-takes-a-village` and `village-memory`). Optional — the code defaults cover the hackathon repo. | Set only to override the defaults. |
+| `GITHUB_MAIN_BRANCH` | Branch a birth commits to (default `main`; a birth needs the redeploy). | Set only to override the default. |
 
 **Model note:** the repo uses `anthropic/claude-sonnet-5` via the Vercel AI Gateway (set in `agent/agent.ts`). Premium models (OpenAI and Anthropic) require **AI Gateway credits** — add them in the Vercel dashboard → AI Gateway → Budgets & Spend. A *budget* alone is only a spend cap, not funds; without credits, premium models return `403 "Free tier users do not have access to this model"`. Free ($0) models such as `inclusionai/ling-3.0-flash-fin-free` work without credits. Change the model in `agent/agent.ts` or with `eve set --model <provider/model-id>`.
 
@@ -63,7 +64,7 @@ Live production: `https://it-takes-a-village-orpin.vercel.app` — Slack events 
 
 - `agent/` — the **midwife** (the Eve root agent Eve compiles). The one Slack app (`@villager`) plays a different role per channel; a mention in a village channel acts as that channel's villager.
 - `agent/channels/slack.ts` — the listen/run loop: resolves the villager by channel and frames the turn; listens on every message, acts only when addressed.
-- `agent/lib/villages.ts` — the channel→villager registry (birth-time config, in git). `agent/lib/memory-ingest.ts` — the memory-ingestion seam (no-op; integration notes inside).
+- `agent/lib/villages.ts` — loads the channel→villager registry (birth-time config, in git). `villages.json` — the registry data itself, at the repo root (Eve rejects JSON under `agent/`). `agent/lib/memory-ingest.ts` — the memory-ingestion seam (no-op; integration notes inside).
 - `agent/sandbox/sandbox.ts` — seeds the village into `/workspace` and brokers the Exa key at the firewall.
 - `agent/sandbox/workspace/village/` — birthed villagers (`villagers/`, e.g. `exa-researcher/`) and community brains (`rooms/`), git-tracked as the source of truth (see `docs/plan.md`).
 - `docs/` — planning docs (Eve ignores these). Start with `docs/status.md` for current state.
