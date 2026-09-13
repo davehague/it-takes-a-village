@@ -78,6 +78,7 @@ test("buildBirthFiles returns the four repo files and a registry with exactly on
   });
   assert.ok(out.files[3].content.endsWith("}\n"));
   assert.equal(out.files[2].content, "");
+  assert.ok(out.files[1].content.startsWith("# Copywriter — brain\n"));
   assert.ok(out.files[0].content.includes('villagerSlug: "copywriter"'));
   // input registry untouched
   assert.deepEqual(Object.keys(registry), ["C0C1GK8SGKT"]);

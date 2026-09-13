@@ -12,7 +12,7 @@ This is v1. It deliberately excludes script generation and multi-stage folders; 
 
 - **Commit target is `main`, not `village-memory`.** A birth is a code change: the folder must be in git so the sandbox seeds from it, and the registry must be in git so the channel routes. Both need the redeploy. Memory snapshots (ADR 0003) stay on `village-memory` because they must *not* redeploy. Both reuse `commitFilesToBranch` (`agent/lib/github-commit.ts`); the branch is already a parameter.
 - **The registry data moves to `villages.json` at the repo root.** The routing table was a hand-written TypeScript object literal. A tool appending to that means string surgery on source code — fragile, and on the highest-blast-radius file in the app. As JSON, a birth is "add one key." `villages.ts` keeps the `Villager` type, `MIDWIFE_CHANNELS`, and `villagerForChannel()`, and builds `VILLAGES` from the JSON; consumers do not change. The file sits at the repo root (not under `agent/`) because Eve's discovery rejects a `.json` inside `agent/lib/` ("Expected … to be a supported authored module within lib/") — verified with a throwaway spike on Sep 13, which also confirmed that a root-level JSON import passes `node --test`, `tsc` (with `resolveJsonModule`), and `eve build`, and is inlined into the server bundle (so nothing is read from disk at runtime on Vercel).
-- **The tool reads the registry from git at birth time**, not from the in-memory `VILLAGES` of the running deployment. The deployed copy can be stale (a human edit pushed after the deploy, or a birth that hasn't redeployed yet). Reading `villages.json` at `main` HEAD via the GitHub contents API, then committing with `force: false`, means a race fails cleanly instead of clobbering.
+- **The tool reads the registry from git at birth time**, not from the in-memory `VILLAGES` of the running deployment. The deployed copy can be stale (a human edit pushed after the deploy, or a birth that hasn't redeployed yet). The tool first resolves the `main` head sha (`getBranchHead`), reads `villages.json` at exactly that sha, and passes the sha to `commitFilesToBranch` as `expectedHeadSha`; if the head has moved by the time the commit is built, the whole birth fails with "main moved while committing — retry" and nothing is written. The final ref update is also `force: false`, so a move inside the commit itself fails the same way. Either way a race retries instead of clobbering.
 - **Channel name → ID is resolved automatically** via `conversations.list` (`channels:read` is granted), using the same `callSlackApi` + `connectSlackCredentials` path `post_as_villager` uses. A human still pre-creates the channel because `channels:manage` cannot be granted on the managed Connect app; fixing that is on the roadmap.
 - **The model writes prose; the tool writes the contract.** The midwife writes only what makes the villager itself (intro, "What I do", voice). The tool deterministically appends the canonical "How I learn" section (the `record_atom` contract, human-only sourcing, attribute by name, supersede-don't-pile, never rewrite own code) parameterized by slug. Every villager gets a correct learning contract without the model re-deriving it.
 - **One gate stays: the reflect-back before birth.** A birth commits to `main`, redeploys production, and creates a public folder — the definition of hard-to-undo and outward. The midwife reflects the summary back and asks "shall I birth it?" once. Everything after the yes is autonomous. (Memory remains gate-free per the Sep 12 pivot.)
@@ -145,7 +145,7 @@ The network half. `slackAuth()` returns `{ botToken, teamId }` from `connectSlac
 
 ### `agent/lib/github-read.ts` (new)
 
-`readFileFromBranch({ repo, branch, path, token }): Promise<string | null>` — GitHub contents API (`GET /repos/{repo}/contents/{path}?ref={branch}`), base64-decoded; `null` on 404, throws on any other failure (including an empty token). Lives next to `github-commit.ts` and reuses its exported `GITHUB_API` constant and `ghHeaders(token)` helper.
+`readFileFromBranch({ repo, branch, path, token }): Promise<string | null>` — GitHub contents API (`GET /repos/{repo}/contents/{path}?ref={branch}`), base64-decoded; `null` on 404, throws on any other failure (including an empty token). Lives next to `github-commit.ts` and reuses its exported `GITHUB_API` constant and `ghHeaders(token)` helper. `branch` is passed as GitHub's `ref`, so a commit sha works too — the birth tool reads at the pinned head sha. `github-commit.ts` also exports `getBranchHead({ repo, branch, token })` → the head sha or `null`, and `commitFilesToBranch` accepts an optional `expectedHeadSha`.
 
 ### `agent/tools/birth_villager.ts` (new, thin glue)
 
@@ -155,9 +155,9 @@ Execute:
 
 1. `GITHUB_TOKEN` (throw if unset), `GITHUB_REPO` (default `davehague/it-takes-a-village`), `GITHUB_MAIN_BRANCH` (default `main`).
 2. `const { id: channelId, name: channelName } = await resolveChannelId(channel)`.
-3. `const raw = await readFileFromBranch({ path: "villages.json", branch, ... })`; `null` → throw "registry not found on main" (never write a registry we didn't read). Parse; on parse failure throw.
+3. `const headSha = await getBranchHead({ repo, branch, token })` (throw if the branch is missing), then `const raw = await readFileFromBranch({ repo, branch: headSha, path: "villages.json", token })`; `null` → throw "registry not found on main" (never write a registry we didn't read). Parse; on parse failure throw.
 4. `const { files, slug } = buildBirthFiles({ registry, channelId, input })`.
-5. `commitFilesToBranch({ repo, branch, files, message: \`birth: ${name} (${slug}) in #${channelName || channelId}\`, token })`.
+5. `commitFilesToBranch({ repo, branch, files, message: \`birth: ${name} (${slug}) in #${channelName || channelId}\`, token, expectedHeadSha: headSha })`.
 6. Return `{ commitSha, url, slug, channelId, channelName, dir, note: "Live after the production redeploy (~1–2 min)." }`.
 
 No temp dir, no store access — birth writes git only; Blob memory is created lazily on the villager's first `record_atom`.
@@ -171,7 +171,7 @@ No temp dir, no store access — birth writes git only; Blob memory is created l
 
 ## Error handling
 
-Every failure is a plain-English `Error` the midwife relays verbatim: channel not found (with closest names); channel already has a villager (name it); channel is a midwife channel; slug taken or invalid (show the derived slug); `GITHUB_TOKEN` unset; registry unreadable on `main`; commit ref race — `commitFilesToBranch` PATCHes with `force: false`, so a 422 surfaces as "main moved while committing — retry". The tool has no partial state to clean up (git is atomic per commit; no Blob writes).
+Every failure is a plain-English `Error` the midwife relays verbatim: channel not found (with closest names); channel already has a villager (name it); channel is a midwife channel; slug taken or invalid (show the derived slug); `GITHUB_TOKEN` unset; registry unreadable on `main`; commit ref race — the birth is pinned to the head sha it read the registry at (`expectedHeadSha`), and the final ref update is `force: false`; both surface as "main moved while committing — retry". The tool has no partial state to clean up (git is atomic per commit; no Blob writes).
 
 ## Testing
 

@@ -2,7 +2,7 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { buildBirthFiles, REGISTRY_PATH } from "../lib/birth";
-import { commitFilesToBranch } from "../lib/github-commit";
+import { commitFilesToBranch, getBranchHead } from "../lib/github-commit";
 import { readFileFromBranch } from "../lib/github-read";
 import { resolveChannelId } from "../lib/slack-client";
 import type { VillagerRecord } from "../lib/villages";
@@ -47,7 +47,13 @@ export default defineTool({
 
     const { id: channelId, name: channelName } = await resolveChannelId(channel);
 
-    const raw = await readFileFromBranch({ repo, branch, path: REGISTRY_PATH, token });
+    // Pin the birth to ONE snapshot of the branch: read the registry AT this sha
+    // and require the same sha as the commit's parent, so a concurrent push
+    // (another birth, a human commit) fails the whole birth instead of
+    // silently overwriting villages.json.
+    const headSha = await getBranchHead({ repo, branch, token });
+    if (!headSha) throw new Error(`Branch ${branch} not found in ${repo}.`);
+    const raw = await readFileFromBranch({ repo, branch: headSha, path: REGISTRY_PATH, token });
     if (raw === null) {
       throw new Error(`Registry ${REGISTRY_PATH} not found on ${branch} — refusing to birth without it.`);
     }
@@ -60,6 +66,8 @@ export default defineTool({
 
     const built = buildBirthFiles({ registry, channelId, input: { name, icon, intro, whatIDo, voice, slug } });
 
+    // resolveChannelId returns name "" when the human passed a raw channel id;
+    // the id is then the readable label in the commit message and the note.
     const where = channelName ? `#${channelName}` : channelId;
     const result = await commitFilesToBranch({
       repo,
@@ -67,6 +75,7 @@ export default defineTool({
       files: built.files,
       message: `birth: ${name} (${built.slug}) in ${where}\n\nBorn by the midwife from a Slack interview. Prose-only villager: instructions.md + empty memory + registry entry.`,
       token,
+      expectedHeadSha: headSha,
     });
 
     return {

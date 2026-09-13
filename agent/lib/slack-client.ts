@@ -51,7 +51,7 @@ export async function resolveChannelId(channel: string): Promise<SlackChannelSum
   if (CHANNEL_ID_RE.test(trimmed)) return { id: trimmed, name: "" };
   const { match, suggestions } = pickChannel(await listPublicChannels(), trimmed);
   if (match) return match;
-  const hint = suggestions.length ? ` — did you mean: ${suggestions.map((s) => `#${s}`).join(", ")}?` : "";
+  const hint = suggestions.length ? ` — did you mean: ${suggestions.map((s) => `#${s}`).join(", ")}?` : ".";
   throw new Error(
     `No public channel named '#${normalizeChannelName(trimmed)}'${hint} Ask the human to check the channel exists and is public.`,
   );
