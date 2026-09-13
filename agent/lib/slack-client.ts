@@ -45,10 +45,30 @@ export async function listPublicChannels(): Promise<SlackChannelSummary[]> {
   return out;
 }
 
+/**
+ * Channel id -> name via conversations.info. Best-effort: returns "" when the
+ * lookup fails (the id is still a valid label; a name is only nicer).
+ */
+export async function lookupChannelName(channelId: string): Promise<string> {
+  try {
+    const { botToken, teamId } = slackAuth();
+    const res = await callSlackApi({ botToken, context: { teamId }, operation: "conversations.info", body: { channel: channelId } });
+    const name = (res.channel as { name?: unknown } | undefined)?.name;
+    return res.ok && typeof name === "string" ? name : "";
+  } catch {
+    return "";
+  }
+}
+
+/** Slack's link form for a channel: `<#C0…|name>` renders as a clickable #name. */
+export function channelRef(channelId: string, name: string): string {
+  return name ? `<#${channelId}|${name}>` : `<#${channelId}>`;
+}
+
 /** "#village-copywriter" or "C0…" -> { id, name }. Throws a human-relayable error when not found. */
 export async function resolveChannelId(channel: string): Promise<SlackChannelSummary> {
   const trimmed = channel.trim();
-  if (CHANNEL_ID_RE.test(trimmed)) return { id: trimmed, name: "" };
+  if (CHANNEL_ID_RE.test(trimmed)) return { id: trimmed, name: await lookupChannelName(trimmed) };
   const { match, suggestions } = pickChannel(await listPublicChannels(), trimmed);
   if (match) return match;
   const hint = suggestions.length ? ` — did you mean: ${suggestions.map((s) => `#${s}`).join(", ")}?` : ".";
