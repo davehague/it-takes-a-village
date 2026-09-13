@@ -2,6 +2,14 @@
 
 Running status for It Takes a Village. Newest first. `plan.md` is the source of truth for the design; this is what is actually done, decided, blocked, and next.
 
+## Sep 12 — Video submitted; learning-loop design settled (autonomous, no confirmation)
+
+**The 2-minute video is complete and submitted.** Remaining work is feature quality, not deadline.
+
+Designed the write side of the learning loop and verified its constraints. Findings (full detail in `eve-verification.md` → "Learning-loop mechanics"): the sandbox `/workspace` persists across turns within one durable session (Slack thread), so a villager can write a file and read it back next turn with no git round-trip; authored tools run in the app runtime but `ctx.getSandbox()` gives the live sandbox handle; Eve memory (`defineMemory`) recall/capture is turn-tied, so passive per-message ingest is out of scope.
+
+**Design pivot: autonomous memory, no confirmation gate.** Dropped the "villager proposes → human confirms → commit" loop. The villager now decides what to remember and writes attributed atoms during its own turn; humans correct after the fact (a correction is a superseding atom). The kept line: a villager manages its **memory** autonomously but never rewrites its **code** (instructions/scripts). Mechanism chosen = a deterministic in-villager script the villager runs via bash (writes `memory/atoms/<id>.md` + rebuilds `index.md`), over a Blob/`fileMemory` path — because git-tracked, human-readable atoms are the "learn in public" story. Retired: the hand-built 👍-approval bridge (no longer needed for learning). Docs updated: `plan.md`, `CLAUDE.md` hard rules, `eve-verification.md`, `status.md`.
+
 ## Sep 12 — Villager reads its brain; seed atoms cleared to learn in public
 
 Wired the memory **read** side and fixed a legitimacy problem. The Exa Researcher now reads `memory/index.md` before every answer (`instructions.md` step 1 + a `cat memory/index.md` line in the `villages.ts` framing) and obeys any rules the channel has taught it, saying which rule shaped the answer.

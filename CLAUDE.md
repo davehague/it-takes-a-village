@@ -26,7 +26,7 @@ Demo: the filmed loop is interview → birth → run → correct → rerun, all 
 
 ## Hard rules
 
-- Villagers never modify themselves. The midwife (alloparent) owns birth, maintain, propose, run_fixtures, commit. Humans approve by reaction.
+- Villagers never rewrite their own **code** (instructions/scripts) — the midwife (alloparent) owns birth, maintain, run_fixtures, commit for those. But a villager **does autonomously manage its own memory layer** (its atoms): as of the Sep 12 pivot there is **no human confirmation gate** on learning — the villager decides what to remember and writes attributed atoms itself; humans correct after the fact (a correction is just a superseding atom). Trust the model to curate memory; keep code changes deliberate.
 - Determinism beats non-determinism: scripts do the work with exit codes; the model picks the script and parameters. Judgment steps only where output is prose.
 - The villager folder stays ~90% harness-agnostic (markdown + CLI scripts + wiki); Eve-specific files (`agent.ts`, `tools/*.ts`, `channels/`, `connections/`) are a thin generated shim.
 - Secrets never go in the folder or the repo. `.env` is gitignored. Private (DM) memory never lands in the public repo.

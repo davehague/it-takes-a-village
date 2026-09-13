@@ -2,6 +2,8 @@
 
 Fast-moving hackathon handoff — the current state, what's next, and open decisions. Updated Sep 12. `docs/plan.md` is the source of truth for the design; this file is "where are we right now." Keep it short and current.
 
+> **Video: DONE and SUBMITTED (Sep 12).** The 2-minute video is complete and submitted. Remaining work is feature quality (the learning loop), not the deadline.
+
 ## Current state — the loop WORKS LIVE ✅
 
 - **`@villager <question>` in `#village-exa-researcher` → one clean, Markdown-rendered, sourced brief** (ending in a `Confidence:` line). Confirmed working end to end: it CDs into the villager folder, runs `search.sh` (real Exa), synthesizes, and replies once.
@@ -24,8 +26,8 @@ Fast-moving hackathon handoff — the current state, what's next, and open decis
 ## Next (build)
 
 1. ~~Live-test the loop~~ **DONE** — one clean sourced reply confirmed. (Optional: decide whether to add the 🔎 per-reply face via the two-post variant.)
-2. **Learning loop = the write side (next real build).** The read side is **DONE**: the villager reads its brain (`memory/index.md`) before every answer and obeys any taught rules (`instructions.md` step 1 + the `villages.ts` framing `cat memory/index.md`). The brain now starts **empty** and learns in public — the fabricated seed atoms were cleared (they contradicted the villager's own "none yet" and implied conversations that never happened; regenerable via `memory-demo.ts`, which now writes to a scratch dir, never the live villager). So the missing piece is **writing** a new atom: correction in thread → villager proposes an atom → human confirms → `recordAtom`/`compileRoomMemory` appends it under `memory/atoms/` → midwife git-commits with the author's name → next run reads it and obeys. This is the filmed "learn in public" beat.
-   - **Deferred (not demo-relevant): `ingestForMemory()` stays a no-op.** Eve's memory lifecycle only recalls/captures on *turns* (mentions), so passive capture of un-mentioned chatter would be a custom Vercel-Blob build with no beat in the 2-min video. Leave the seam documented.
+2. **Learning loop = the write side (in progress).** The read side is **DONE**: the villager reads its brain (`memory/index.md`) before every answer and obeys any taught rules (`instructions.md` step 1 + the `villages.ts` framing `cat memory/index.md`). The brain starts **empty** and learns in public. **Design settled (Sep 12): autonomous, no confirmation.** Mechanism = a **deterministic in-villager script** (e.g. `scripts/record-atom.*`) the villager runs via bash during its turn: when a human corrects/teaches it, the villager writes `memory/atoms/<id>.md` (attributed to the teacher) and rebuilds `memory/index.md`. Persists in-thread (sandbox `/workspace` survives across turns in a session); git-permanence across threads/redeploys is a later midwife-commit step. Chosen over a Blob/`fileMemory` path because git-tracked, human-readable atoms *are* the "learn in public" story.
+   - **Deferred: `ingestForMemory()` stays a no-op.** Eve memory recall/capture is turn-tied (mention-only), so passive capture of un-mentioned chatter would be a custom Blob build with no current payoff.
 3. **`birth`/`commit` pipeline**: threaded interview incl. "show me an example of the input" → template-fill a villager folder → append the channel→villager entry to `agent/lib/villages.ts` → **git-commit** (sandbox is not durable; the midwife must commit). Channel is pre-created by a human (auto-create deferred — `channels:manage` not grantable).
 4. **Learning loop**: correction in thread → villager proposes a knowledge atom → human confirms → passes the fixture → committed with author's name → changes the next run.
 
@@ -55,4 +57,4 @@ Fast-moving hackathon handoff — the current state, what's next, and open decis
 
 - Cut the mom-test/non-developer/from-home narrative; cut science/Battelle, OpenClaw, Second Reader, PR firm/voice/CopilotKit. Focus is purely the villager-in-a-channel + midwife + community brain.
 - Git is the source of truth; villagers live under `agent/sandbox/workspace/village/villagers/`, each with its own community brain at `<slug>/memory/` (one channel = one villager, so no separate `rooms/` tree); `agent/` is the midwife (folder name is fixed by Eve, can't be renamed).
-- Learning is a *proposal* the villager considers saving as an atom, confirmed by a human — not an automatic permanent rule.
+- ~~Learning is a *proposal* the villager considers saving as an atom, confirmed by a human~~ **RETIRED Sep 12.** Pivot to **autonomous memory, no confirmation gate**: the villager decides what to remember and writes attributed atoms itself; humans correct after the fact. It still never rewrites its own instructions/scripts (code) — autonomy is over the memory layer only. See `plan.md` and `eve-verification.md`.
