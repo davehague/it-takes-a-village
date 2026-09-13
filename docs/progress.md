@@ -2,6 +2,14 @@
 
 Running status for It Takes a Village. Newest first. `plan.md` is the source of truth for the design; this is what is actually done, decided, blocked, and next.
 
+## Sep 12 — Learning loop LIVE end to end; attribution fixed
+
+The autonomous write side works in Slack: the Exa Researcher judged a human message a durable rule and saved an attributed atom via `record-atom.mjs` — read → answer → learn all in one thread. Built and shipped: `scripts/record-atom.mjs` (deterministic write in Ren's exact frontmatter, exact-duplicate dedup, `superseded_by` supersession, `index.md` rebuild) + the villager's end-of-turn extract step (human-only filter, dedup, supersession) in `instructions.md`/`villages.ts`.
+
+Then fixed the one live bug: atoms were attributed to a raw Slack id (`U0C0YRM6W15`) because Eve attaches only the id to messages (no profile lookup by design). `slack.ts` now resolves thread participants' ids → display names via `ctx.slack.request("users.info")` (cached, best-effort) and injects a "Speaker names" map so the villager uses the name. Verified `users:read` is granted (`U0C0YRM6W15` → "David Hague"). Commits: `7ee7810` (write side), `343e683` (attribution). Follow-up for Ren's `memory.ts`: honor `superseded_by` so a canonical recompile matches the villager's live index.
+
+**Next: the birth/commit pipeline = atom permanence to git.** Atoms currently live only in a thread's sandbox. The hard problem: neither sandbox nor app runtime can `git push`, so writes reach git via the GitHub API (token) or via a human committing posted content. Brainstorm that first.
+
 ## Sep 12 — Knowledge-ingestion model locked (ADR 0001); scope deferred (ADR 0002)
 
 Worked through the ingestion model carefully — the collection/non-collection boundary is the quality-critical part of "learn in public". Recorded it as `docs/adrs/0001-knowledge-ingestion-model.md` (Accepted). Five-stage pipeline (context → capture → extract → store → recall). Decisions: (1) extraction runs **end-of-turn over a per-thread watermark** — timely, cheap, idempotent, learns from all human parties in the thread; (2) **human-only sourcing** with a cited-web-results exception — the villager never learns from its own prose; (3) **judgment over keywords**, with "nothing worth saving" a valid outcome to prevent over-collection; (4) **supersession** (`supersedes: <id>`) so updated rules replace stale ones instead of piling up. Deferred in `docs/adrs/0002-memory-scope-thread-vs-channel.md`: thread-vs-channel scope and the mention-per-thread interaction model (David flagged thread-based tagging as not his favorite; revisit deliberately). Source-of-truth docs updated to point at the ADRs (`plan.md`, `status.md`).
