@@ -1,7 +1,7 @@
-import { connectSlackCredentials } from "@vercel/connect/eve";
 import { callSlackApi } from "eve/channels/slack";
 import { defineTool } from "eve/tools";
 import { z } from "zod";
+import { slackAuth } from "../lib/slack-client";
 
 /**
  * Post a Slack message under a villager's own name and icon.
@@ -9,19 +9,9 @@ import { z } from "zod";
  * This is how a villager "speaks in its own voice": one Slack app posts with a
  * per-message `username` + `icon_emoji` (Slack's `chat:write.customize`), into a
  * channel it is not a member of (`chat:write.public`). Both were proven live in
- * the Sep 12 spike — see docs/eve-verification.md. We mint the bot token through
- * Vercel Connect (authenticated by VERCEL_OIDC_TOKEN), not a pasted xoxb- secret,
- * because the managed Slack app exposes no static token.
+ * the Sep 12 spike — see docs/eve-verification.md. The bot token is minted
+ * through Vercel Connect (see agent/lib/slack-client.ts), not a pasted secret.
  */
-
-// A tool's execute() runs outside every Slack handler, so there is no `ctx.slack`
-// handle to read the inbound event's teamId from — the docs are explicit that
-// "outside those contexts there is no handle" and that the caller must pass the
-// workspace itself (channels/slack.mdx). So teamId comes from SLACK_TEAM_ID, and
-// this constant is the zero-config fallback that keeps the hackathon workspace
-// working on a machine with no env file. A second workspace must set the env var.
-const DEFAULT_TEAM_ID = "T0C28HCG1R6";
-const DEFAULT_CONNECTOR = "slack/it-takes-a-village";
 
 export default defineTool({
   description:
@@ -54,14 +44,10 @@ export default defineTool({
     start: ({ villagerName, channel }) => `Post as ${villagerName} in ${channel}`,
   },
   async execute({ channel, villagerName, text, iconEmoji, threadTs }) {
-    const connector = process.env.SLACK_CONNECTOR ?? DEFAULT_CONNECTOR;
-    const credentials = connectSlackCredentials(connector);
-
-    // teamId picks the workspace whose app installation mints the token.
-    const teamId = process.env.SLACK_TEAM_ID ?? DEFAULT_TEAM_ID;
+    const { botToken, teamId } = slackAuth();
 
     const response = await callSlackApi({
-      botToken: credentials.botToken,
+      botToken,
       context: { teamId },
       operation: "chat.postMessage",
       // Slack's `markdown_text` field renders GitHub-flavored Markdown
