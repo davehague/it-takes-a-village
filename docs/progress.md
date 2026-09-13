@@ -2,6 +2,14 @@
 
 Running status for It Takes a Village. Newest first. `plan.md` is the source of truth for the design; this is what is actually done, decided, blocked, and next.
 
+## Sep 13 — Atom permanence: memory moved to Blob + git snapshot; durable learning verified LIVE
+
+Re-examined the "git is the source of truth" premise (which was making the git write painful) and split memory into two stores ([ADR 0003](adrs/0003-memory-substrate-blob-live-git-snapshot.md)): **Vercel Blob = the live runtime store** (cheap writes, no redeploy) and **git = a periodically-snapshotted public record**. Write mechanism = **C1**: the sandbox no longer touches memory. Built: `MemoryStore` abstraction (`agent/lib/memory-store.ts`, Blob in prod / local fs in dev); the atom-write logic ported from the retired `record-atom.mjs` to a pure TS function (`agent/lib/record-atom.ts`, dedup + supersession); the app-runtime **`record_atom` tool** (`agent/tools/record_atom.ts`); the read side injected from the store as turn context (`brainFraming` in `slack.ts`); the **`snapshot_memory` tool** + `commitFilesToBranch` (`agent/lib/github-commit.ts`, GitHub Git Data API → non-deploying `village-memory` branch); Ren's `memory.ts` now honors `superseded_by`. 20 unit tests, `tsc`/`eve` clean (13 tools). Commits `662e1b2`, `34cbce5`, `d376552`, `227dfdd`.
+
+Env provisioned + deployed: created the `village-memory` Blob store (token in prod + `.env.local`), added a repo-scoped `GITHUB_TOKEN` (prod + local). Verified every path against the live services (Blob round-trip, `record_atom`-over-Blob, `commitFilesToBranch`).
+
+**Verified LIVE in Slack:** taught the Exa Researcher "always include tokens/sec" → it recorded an attributed atom → a **brand-new thread obeyed the rule** (tokens/sec for every model). The rule survived the thread boundary because memory persists to Blob, not the thread sandbox — the whole point of ADR 0003. **Next:** the `birth` pipeline (reuses `commitFilesToBranch`); minor: wire a Slack trigger for `snapshot_memory`.
+
 ## Sep 12 — Learning loop LIVE end to end; attribution fixed
 
 The autonomous write side works in Slack: the Exa Researcher judged a human message a durable rule and saved an attributed atom via `record-atom.mjs` — read → answer → learn all in one thread. Built and shipped: `scripts/record-atom.mjs` (deterministic write in Ren's exact frontmatter, exact-duplicate dedup, `superseded_by` supersession, `index.md` rebuild) + the villager's end-of-turn extract step (human-only filter, dedup, supersession) in `instructions.md`/`villages.ts`.
