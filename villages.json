@@ -21,5 +21,11 @@
     "name": "Enterprise Architect",
     "icon": ":triangular_ruler:",
     "dir": "village/villagers/enterprise-architect"
+  },
+  "C0C1BF8HGQK": {
+    "slug": "greeter",
+    "name": "Greeter",
+    "icon": ":wave:",
+    "dir": "village/villagers/greeter"
   }
 }
