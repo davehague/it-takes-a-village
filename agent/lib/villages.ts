@@ -26,6 +26,8 @@ export interface Villager {
   readonly icon: string;
   /** Path to the villager folder inside the sandbox workspace (cwd /workspace). */
   readonly dir: string;
+  /** One line, third person: what this villager does (shown by list_villagers). */
+  readonly description?: string;
   /**
    * Optional villager-specific framing appended to the generic base the Slack
    * handler builds (see agent/channels/slack.ts). Use it for operational glue the
@@ -42,6 +44,7 @@ export interface VillagerRecord {
   name: string;
   icon: string;
   dir: string;
+  description?: string;
   framing?: string[];
 }
 
@@ -63,6 +66,7 @@ export function registryFromJson(json: Record<string, VillagerRecord>): Record<s
       name: r.name,
       icon: r.icon,
       dir: r.dir,
+      ...(r.description ? { description: r.description } : {}),
       ...(r.framing && r.framing.length > 0 ? { framing: r.framing.join("\n") } : {}),
     };
   }

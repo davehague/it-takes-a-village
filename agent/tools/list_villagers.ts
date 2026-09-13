@@ -16,7 +16,7 @@ import registry from "../../villages.json" with { type: "json" };
  */
 export default defineTool({
   description:
-    "List the villagers that live in the village: slug, name, emoji face, Slack channel (id, name, and a channelRef you can paste so Slack renders a clickable #channel link), folder, and status (live, or deploying if just born and the redeploy hasn't finished). Also lists the midwife's own channels. Call this whenever you need to say who exists or where they live — never guess channel names.",
+    "List the villagers that live in the village: slug, name, emoji face, one-line description of what it does, Slack channel (id, name, and a channelRef you can paste so Slack renders a clickable #channel link), folder, and status (live, or deploying if just born and the redeploy hasn't finished). Also lists the midwife's own channels. Call this whenever you need to say who exists or where they live — never guess channel names.",
   inputSchema: z.object({}),
   label: { start: () => "List villagers" },
   async execute() {

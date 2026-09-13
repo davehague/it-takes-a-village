@@ -28,12 +28,14 @@ export type BirthInput = {
   intro: string;
   /** Markdown body of the "What I do" section. */
   whatIDo: string;
+  /** One line, third person: what this villager does — stored in the registry, shown by list_villagers. Required at birth. */
+  description?: string;
   /** Optional short paragraph on tone, rendered as "How I sound". */
   voice?: string;
 };
 
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const ICON_RE = /^:[a-z0-9_+-]+:$/;
+export const ICON_RE = /^:[a-z0-9_+-]+:$/;
 
 /** "Meeting Notes Bot!" -> "meeting-notes-bot". Throws when nothing survives. */
 export function deriveSlug(name: string): string {
@@ -105,7 +107,7 @@ export type BirthFiles = {
   dir: string;
 };
 
-function requireText(input: BirthInput, field: "name" | "icon" | "intro" | "whatIDo"): string {
+function requireText(input: BirthInput, field: "name" | "icon" | "intro" | "whatIDo" | "description"): string {
   const value = input[field];
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`Birth needs a non-empty ${field}.`);
@@ -127,6 +129,7 @@ export function buildBirthFiles(args: {
   const icon = requireText(input, "icon");
   requireText(input, "intro");
   requireText(input, "whatIDo");
+  const description = requireText(input, "description");
 
   if (!ICON_RE.test(icon)) {
     throw new Error(`Icon '${icon}' must be a Slack emoji in colon form, e.g. ':pencil:'.`);
@@ -149,7 +152,7 @@ export function buildBirthFiles(args: {
   }
 
   const dir = `village/villagers/${slug}`;
-  const record: VillagerRecord = { slug, name, icon, dir };
+  const record: VillagerRecord = { slug, name, icon, dir, description };
   const next: Record<string, VillagerRecord> = { ...registry, [channelId]: record };
   const base = `${VILLAGERS_ROOT}/${slug}`;
 

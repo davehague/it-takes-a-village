@@ -5,7 +5,7 @@ import { rosterFromRegistries } from "./roster.ts";
 
 const exa = { slug: "exa-researcher", name: "Exa Researcher", icon: ":mag:", dir: "village/villagers/exa-researcher" };
 const ea = { slug: "enterprise-architect", name: "Enterprise Architect", icon: ":triangular_ruler:", dir: "village/villagers/enterprise-architect" };
-const greeter = { slug: "greeter", name: "Greeter", icon: ":wave:", dir: "village/villagers/greeter" };
+const greeter = { slug: "greeter", name: "Greeter", icon: ":wave:", dir: "village/villagers/greeter", description: "Welcomes new people." };
 
 test("deployed villagers are live, in registry order, with their channel ids", () => {
   const rows = rosterFromRegistries({ C1: exa, C2: ea }, { C1: exa, C2: ea });
@@ -18,6 +18,7 @@ test("deployed villagers are live, in registry order, with their channel ids", (
   );
   assert.equal(rows[0].icon, ":mag:");
   assert.equal(rows[0].dir, "village/villagers/exa-researcher");
+  assert.equal(rows[0].description, "");
 });
 
 test("a villager on main but not yet deployed is flagged deploying, after the live ones", () => {
@@ -29,6 +30,7 @@ test("a villager on main but not yet deployed is flagged deploying, after the li
       ["greeter", "deploying"],
     ],
   );
+  assert.equal(rows[1].description, "Welcomes new people.");
 });
 
 test("without a main snapshot every deployed villager is simply live", () => {

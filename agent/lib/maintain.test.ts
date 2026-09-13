@@ -5,7 +5,7 @@ import { buildMaintainFiles, validateVillagerPath } from "./maintain.ts";
 
 const registry = {
   C0C1GK8SGKT: { slug: "exa-researcher", name: "Exa Researcher", icon: ":mag:", dir: "village/villagers/exa-researcher" },
-  C0C1BF8HGQK: { slug: "greeter", name: "Greeter", icon: ":wave:", dir: "village/villagers/greeter" },
+  C0C1BF8HGQK: { slug: "greeter", name: "Greeter", icon: ":wave:", dir: "village/villagers/greeter", description: "Welcomes people." },
 };
 
 test("validateVillagerPath accepts relative code paths and normalizes them", () => {
@@ -41,13 +41,37 @@ test("buildMaintainFiles maps files under the villager's repo folder and returns
       "agent/sandbox/workspace/village/villagers/greeter/scripts/hello.sh",
     ],
   );
+  assert.deepEqual(out.written, ["instructions.md", "scripts/hello.sh"]);
+  assert.equal(out.registryChanged, false);
   assert.equal(out.files[0].content, "# Greeter\n");
 });
 
-test("buildMaintainFiles rejects an unknown slug, no files, and duplicate paths", () => {
+test("buildMaintainFiles with meta rewrites the registry entry and appends villages.json", () => {
+  const out = buildMaintainFiles({
+    registry,
+    villagerSlug: "exa-researcher",
+    meta: { description: "Sourced web briefs.", icon: ":mag_right:" },
+  });
+  assert.equal(out.registryChanged, true);
+  assert.deepEqual(out.written, []);
+  assert.equal(out.files.length, 1);
+  assert.equal(out.files[0].path, "villages.json");
+  const written = JSON.parse(out.files[0].content);
+  assert.deepEqual(Object.keys(written), ["C0C1GK8SGKT", "C0C1BF8HGQK"]);
+  assert.equal(written.C0C1GK8SGKT.description, "Sourced web briefs.");
+  assert.equal(written.C0C1GK8SGKT.icon, ":mag_right:");
+  assert.equal(written.C0C1GK8SGKT.name, "Exa Researcher");
+  assert.equal(written.C0C1BF8HGQK.description, "Welcomes people.");
+  assert.equal(registry.C0C1GK8SGKT.icon, ":mag:"); // input untouched
+});
+
+test("buildMaintainFiles rejects an unknown slug, nothing to do, bad meta, and duplicate paths", () => {
   const one = [{ path: "instructions.md", content: "x" }];
   assert.throws(() => buildMaintainFiles({ registry, villagerSlug: "nobody", files: one }), /Unknown villager 'nobody'/);
-  assert.throws(() => buildMaintainFiles({ registry, villagerSlug: "greeter", files: [] }), /at least one file/);
+  assert.throws(() => buildMaintainFiles({ registry, villagerSlug: "greeter", files: [] }), /at least one file to write or a registry change/);
+  assert.throws(() => buildMaintainFiles({ registry, villagerSlug: "greeter", meta: { description: "Welcomes people." } }), /at least one file/);
+  assert.throws(() => buildMaintainFiles({ registry, villagerSlug: "greeter", meta: { icon: "wave" } }), /colon form/);
+  assert.throws(() => buildMaintainFiles({ registry, villagerSlug: "greeter", meta: { name: " " } }), /name can't be empty/);
   assert.throws(
     () => buildMaintainFiles({ registry, villagerSlug: "greeter", files: [...one, { path: "./instructions.md", content: "y" }] }),
     /listed twice/,

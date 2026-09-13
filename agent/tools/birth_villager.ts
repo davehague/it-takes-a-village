@@ -32,6 +32,11 @@ export default defineTool({
       .string()
       .min(1)
       .describe("Markdown body of the 'What I do' section — what happens when someone tags it, step by step."),
+    description: z
+      .string()
+      .min(1)
+      .max(200)
+      .describe("One line, third person, what this villager does — stored in the registry and shown by list_villagers, e.g. 'Answers research questions with sourced web briefs.'"),
     voice: z.string().optional().describe("Optional short paragraph on tone, rendered as 'How I sound'."),
     slug: z
       .string()
@@ -39,7 +44,7 @@ export default defineTool({
       .describe("Optional folder slug (lowercase-dashed). Defaults to one derived from the name."),
   }),
   label: { start: ({ name, channel }) => `Birth ${name} into ${channel}` },
-  async execute({ name, icon, channel, intro, whatIDo, voice, slug }) {
+  async execute({ name, icon, channel, intro, whatIDo, description, voice, slug }) {
     const token = process.env.GITHUB_TOKEN;
     if (!token) throw new Error("GITHUB_TOKEN is not set — the midwife cannot commit a birth.");
     const repo = process.env.GITHUB_REPO ?? "davehague/it-takes-a-village";
@@ -64,7 +69,7 @@ export default defineTool({
       throw new Error(`Registry ${REGISTRY_PATH} on ${branch} is not valid JSON: ${(e as Error).message}`);
     }
 
-    const built = buildBirthFiles({ registry, channelId, input: { name, icon, intro, whatIDo, voice, slug } });
+    const built = buildBirthFiles({ registry, channelId, input: { name, icon, intro, whatIDo, description, voice, slug } });
 
     // resolveChannelId returns name "" when the human passed a raw channel id;
     // the id is then the readable label in the commit message and the note.

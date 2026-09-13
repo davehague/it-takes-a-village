@@ -4,6 +4,7 @@
     "name": "Exa Researcher",
     "icon": ":mag:",
     "dir": "village/villagers/exa-researcher",
+    "description": "Answers research questions by searching the live web (Exa) and replying with a short, sourced brief and a confidence line.",
     "framing": [
       "Your brain (the rules and open questions this channel has taught you) is provided to you in this turn's context — read it and obey any rule under 'How this room wants research done'.",
       "To research: cd into your folder and run the search, e.g.:",
@@ -20,12 +21,14 @@
     "slug": "enterprise-architect",
     "name": "Enterprise Architect",
     "icon": ":triangular_ruler:",
-    "dir": "village/villagers/enterprise-architect"
+    "dir": "village/villagers/enterprise-architect",
+    "description": "Turns a rough project idea into a sound technical shape: asks the load-bearing questions first, then recommends an architecture with tradeoffs and risks."
   },
   "C0C1BF8HGQK": {
     "slug": "greeter",
     "name": "Greeter",
     "icon": ":wave:",
-    "dir": "village/villagers/greeter"
+    "dir": "village/villagers/greeter",
+    "description": "Welcomes new people and explains what the village is, listing the villagers and where they live."
   }
 }

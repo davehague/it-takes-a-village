@@ -53,6 +53,7 @@ const input = {
   icon: ":pencil:",
   intro: "I am **Copywriter** ✏️, a villager.",
   whatIDo: "Draft copy.",
+  description: "Turns rough notes into tight copy.",
 };
 
 test("buildBirthFiles returns the four repo files and a registry with exactly one new key", () => {
@@ -75,6 +76,7 @@ test("buildBirthFiles returns the four repo files and a registry with exactly on
     name: "Copywriter",
     icon: ":pencil:",
     dir: "village/villagers/copywriter",
+    description: "Turns rough notes into tight copy.",
   });
   assert.ok(out.files[3].content.endsWith("}\n"));
   assert.equal(out.files[2].content, "");
@@ -115,4 +117,5 @@ test("buildBirthFiles rejects a bad icon, a bad slug, and empty prose", () => {
   assert.throws(() => buildBirthFiles({ registry, channelId: "C0NEW00001", input: { ...input, icon: "pencil" } }), /colon form/);
   assert.throws(() => buildBirthFiles({ registry, channelId: "C0NEW00001", input: { ...input, slug: "Copy Bot" } }), /Slug 'Copy Bot' is invalid/);
   assert.throws(() => buildBirthFiles({ registry, channelId: "C0NEW00001", input: { ...input, whatIDo: "  " } }), /non-empty whatIDo/);
+  assert.throws(() => buildBirthFiles({ registry, channelId: "C0NEW00001", input: { ...input, description: "" } }), /non-empty description/);
 });
