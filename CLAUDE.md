@@ -6,9 +6,11 @@ An open-source pattern — with a working reference implementation — for **age
 
 ## Where things live
 
-- **`docs/plan.md`** — design doc: the architecture and the reasoning behind it. Start here for how the system is shaped.
-- **`docs/status.md`** — current state, what's live, and open decisions. Start here for "where are we now" (tool inventory, model, live URL, Vercel/Slack refs).
-- **`docs/future.md`** — roadmap and deferred scope.
+- **`docs/plan.md`** — design doc: the architecture and the reasoning behind it. Start here for how the system is shaped. Update only when the design itself changes.
+- **`docs/status.md`** — the **present**: what's live, the operational reference (tool inventory, model, live URL, Vercel/Slack refs), and open decisions. Start here for "where are we now." When something ships, refresh its current-state line here; keep it a snapshot, never a changelog.
+- **`docs/future.md`** — the **future**: the single forward backlog, triaged Build / Research / Decide, plus deferred scope. New wishes and pending decisions go here; strike an item when it ships.
+- **`docs/progress.md`** — the **past**: the dated build log, newest first. Every shipped milestone or locked decision gets an entry with its commit shas.
+- **Keeping those three honest:** they split by tense — past / present / future — so nothing lives in two of them. Ship something → add a `progress.md` entry, refresh its `status.md` line, strike it from `future.md`. Defer something or need a decision → `future.md`. Record *why* a choice was made → an ADR. Don't let "next" lists grow inside `status.md` or `progress.md`.
 - **`docs/eve-verification.md`** — verified Eve-framework facts and the design corrections they force (sandbox durability, approvals, `conversations.create`, the anti-loop post-mortem).
 - **`docs/adrs/`** — decision records: 0001 knowledge-ingestion model; 0002 deferred thread-vs-channel scope; 0003 memory substrate (Blob live + git snapshot).
 - **`docs/architecture-deploy-and-brains.md`** + **`docs/whiteboard/`** — the deploy-and-brains board and source photos.

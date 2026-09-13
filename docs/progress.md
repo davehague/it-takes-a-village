@@ -2,9 +2,17 @@
 
 Running status for It Takes a Village. Newest first. `plan.md` is the design doc; this is what is actually done, decided, blocked, and next.
 
+## Sep 13 — Backlog triaged into `future.md`; doc roles split by tense
+
+David's post-hackathon wish list — the ICM multi-stage promotion rule, "hands" via script creation + a fixture gate at birth, non-technical integrations and interview handholding, the `channels:manage` gap, one Slack app vs two, channel-scoped interaction, scheduling/proactive villagers, and multi-level memory + chat provenance — was triaged into Build / Research / Decide and woven into `future.md`, which is now the single forward backlog. Finding: the `channels:manage` "granted but not working" report is the declared-versus-granted gap the Sep 12 spike already proved, so it collapses into the one-app-or-two decision. The three docs now split by tense — this log = past, `status.md` = present, `future.md` = future — and `CLAUDE.md` says how to keep each honest. No code change.
+
 ## Sep 13 — Hackathon → living project; docs reframed
 
 The hackathon build carried through the full birth → run → learn → maintain loop in production, so the project graduated from "hackathon submission" to a living open-source project. Reframed the doc set off the deadline/build-day framing: `CLAUDE.md` and `README.md` now lead with the pattern (agents born/run/taught in public; the folder is the asset) and the open-source direction; `plan.md` retitled from "Hackathon Plan" to the design doc, with the build-day timeline, Plan B, "scope for today", and prep sections replaced by design principles + a status/roadmap pointer; `status.md`, `future.md`, and this log de-hackathonized. Origin (AI Tinkerers Columbus, Sep 12–13 2026) kept as a one-line provenance note throughout. No code change.
+
+## Sep 13 — Birth pipeline + maintain tools shipped; Greeter born, edited, and retired (verified LIVE)
+
+`birth_villager` (`agent/tools/birth_villager.ts`, pure half in `agent/lib/birth.ts`) resolves the human's `#channel`, reads the registry from `main` at a pinned head sha, renders a prose-only villager folder (the midwife writes intro / what-I-do / voice plus a one-line `description`; the tool appends the canonical "How I learn" section), and commits folder + registry entry to `main` in one commit pinned to that sha — a concurrent push fails the birth with "main moved while committing — retry" instead of clobbering; production auto-redeploys in ~1–2 min. Registry data moved to `villages.json` at the repo root (Eve rejects JSON under `agent/`). Shipped alongside: `list_villagers` (live roster with real channel refs and a `deploying` flag), `read_villager_file` (reads from `main`, fresher than the sandbox copy), and `update_villager` (edit files and/or the registry `description`/`name`/`icon` in one pinned commit; `memory/` refused). 51 unit tests; `eve info` = 17 tools. **Live proof:** a throwaway Greeter 👋 was born from a Slack interview (`d75c744`), answered and recorded attributed atoms in `#village-test-greeter` after the redeploy, was edited twice by the midwife itself via `update_villager` (`9cb8a88`, `f61ba9c`), then retired by hand (`0a25a9d`). Tool commits: `4925197`, `4de3231`, `6348a28`. Spec: `docs/superpowers/specs/2026-09-13-birth-pipeline-design.md`; plan: `docs/superpowers/plans/2026-09-13-birth-pipeline.md`.
 
 ## Sep 13 — Atom permanence: memory moved to Blob + git snapshot; durable learning verified LIVE
 
