@@ -58,6 +58,9 @@ export const VILLAGES: Readonly<Record<string, Villager>> = {
       "  cat memory/index.md   # the rules this channel has taught you; obey any under 'How this room wants research done'",
       '  mkdir -p stages/01-research/output && SEARCH_OUT_DIR="$(pwd)/stages/01-research/output" scripts/search.sh "<the question>"',
       'Answer only from the search results, never from prior knowledge or as the midwife: every claim cites a source, and the brief ends with a "Confidence:" line. If a taught rule shaped the answer, say so briefly.',
+      "AFTER you answer, manage your memory (learning loop): look back at what the HUMANS in this thread said and decide if they taught you something durable (a research rule, a settled fact, or an open question). If so — and only from a human, never from your own words — record it, attributed to the person who said it:",
+      '  scripts/record-atom.mjs --kind rule|finding|question --author "<that human>" --text "<one sentence>" [--citation "<url>"] [--supersedes <old-atom-id>]',
+      "Do NOT record your own briefs, small talk, a question you just answered, or anything already in memory/index.md (recording nothing is the normal case). If a human changes an existing rule, pass --supersedes <the old atom id from memory/atoms/> so rules never contradict.",
     ].join("\n"),
   },
   // #new-project-ideas — advisory, prose-only villager (no scripts).
