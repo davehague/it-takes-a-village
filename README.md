@@ -23,6 +23,9 @@ eve link --project it-takes-a-village   # links to Vercel and writes VERCEL_OIDC
 | --- | --- | --- |
 | `AI_GATEWAY_API_KEY` | Vercel AI Gateway key — funds the agent's model calls ("the brain"). The exact name the AI SDK reads. | Vercel dashboard → AI Gateway → API Keys. |
 | `VERCEL_OIDC_TOKEN` | Fallback AI Gateway credential, auto-written by `eve link`. Short-lived; re-run `eve link` to refresh. | Automatic. |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob store token — the live memory store where villagers' learned atoms persist across threads/redeploys ([ADR 0003](docs/adrs/0003-memory-substrate-blob-live-git-snapshot.md)). | `vercel blob create-store village-memory --access public` (writes it to `.env.local` and connects it to all envs). |
+| `GITHUB_TOKEN` | Repo-scoped token the `snapshot_memory` tool uses to commit a villager's memory folder to the `village-memory` branch via the GitHub Git Data API. App env only — never commit a real value. | Fine-grained PAT at github.com → Settings → Developer settings, scoped to this repo with **Contents: Read and write**. |
+| `GITHUB_REPO`, `GITHUB_MEMORY_BRANCH` | Snapshot target (default `davehague/it-takes-a-village` and `village-memory`). Optional — the code defaults cover the hackathon repo. | Set only to override the defaults. |
 
 **Model note:** the repo uses `openai/gpt-5.6-luna-fast` (OpenAI Luna) via the Vercel AI Gateway — a cheap, fast model. Premium models (OpenAI and Anthropic, e.g. `anthropic/claude-sonnet-5`) require **AI Gateway credits** — add them in the Vercel dashboard → AI Gateway → Budgets & Spend. A *budget* alone is only a spend cap, not funds; without credits, premium models return `403 "Free tier users do not have access to this model"`. Free ($0) models such as `inclusionai/ling-3.0-flash-fin-free` work without credits. Change the model in `agent/agent.ts` or with `eve set --model <provider/model-id>`.
 
