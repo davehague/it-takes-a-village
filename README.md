@@ -50,6 +50,8 @@ vercel connect create slack --connection-method slack-app --name it-takes-a-vill
 
 A browser opens: **choose the Slack workspace** and authorize. This registers a managed Slack app, installs it, and points its event trigger at `/eve/v1/slack` on the production deployment. Then deploy (below). To use the bot, invite it to a channel (`/invite @it-takes-a-village`) or open a DM, and `@mention` it.
 
+The managed path needs no manifest to build. [`slack/manifest.json`](slack/manifest.json) is kept as the authoritative record of the app's scopes and event subscriptions — and as the starting point if you move to a **self-managed** Slack app to regain scopes the managed connector won't grant (notably `channels:manage`, so the midwife can auto-create village channels). That route is written up in [`docs/future.md`](docs/future.md).
+
 ## Deploy
 
 The GitHub repo is connected to the Vercel project, so **pushing to `main` auto-redeploys production**. For a manual deploy:

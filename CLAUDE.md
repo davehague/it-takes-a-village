@@ -28,7 +28,7 @@ An open-source pattern — with a working reference implementation — for **age
 
 - **Node >=24 required.** The default `node` is a v22 and aborts. Run `nvm use 24`, or non-interactively `export PATH="$(ls -d ~/.nvm/versions/node/v24*/bin | tail -1):$PATH"` before `node`/`npx`/`pnpm`. (Our machines have different v24 patches — don't pin one.)
 - **Deploy = push to `main`** (GitHub → Vercel auto-redeploys). Manual: `vercel deploy --prod`. `eve deploy` is broken (force-appends an invalid flag) — don't use it. Git is source-of-truth *and* wired to deploy, so a midwife commit also redeploys — keep commits deliberate.
-- **The brain runs on Vercel AI Gateway;** premium models need AI Gateway *credits*, not just a budget (else `403 "Free tier users do not have access to this model"`). Full env/setup is in `README.md`; Slack scopes are declared in `docs/manifest.json`; Eve facts in `docs/eve-verification.md`.
+- **The brain runs on Vercel AI Gateway;** premium models need AI Gateway *credits*, not just a budget (else `403 "Free tier users do not have access to this model"`). Full env/setup is in `README.md`; the Slack app's scopes and events are declared in `slack/manifest.json`; Eve facts in `docs/eve-verification.md`.
 
 ## Team
 

@@ -104,7 +104,7 @@ Milestone: the "villager = persona in one app" model is validated end to end. On
 - **Channels are pre-created by a human** for the demo; villagers post in via `chat:write.public`. Auto-create deferred.
 
 ### Blocked / not today
-- `channels:manage` (midwife auto-creates the village channel) — not grantable on the Vercel Connect managed Slack app. Post-hackathon fix: self-managed app created from `docs/manifest.json` (see `future.md`).
+- `channels:manage` (midwife auto-creates the village channel) — not grantable on the Vercel Connect managed Slack app. Post-hackathon fix: self-managed app created from `slack/manifest.json` (see `future.md`).
 
 ### Next
 - Build the real midwife birth flow as an Eve tool in the deployed agent: interview → fill villager folder → announce as the villager via the `ctx.slack.request` escape hatch (custom name + icon).
