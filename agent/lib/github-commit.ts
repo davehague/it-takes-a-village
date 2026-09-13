@@ -6,18 +6,22 @@
  * commit -> move ref.
  */
 
-const API = "https://api.github.com";
+export const GITHUB_API = "https://api.github.com";
+
+/** Standard headers for the GitHub REST API with a repo-scoped token. */
+export function ghHeaders(token: string): Record<string, string> {
+  return {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    "Content-Type": "application/json",
+  };
+}
 
 async function gh(token: string, path: string, init?: RequestInit): Promise<any> {
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(`${GITHUB_API}${path}`, {
     ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
+    headers: { ...ghHeaders(token), ...(init?.headers ?? {}) },
   });
   if (!res.ok) {
     throw new Error(`GitHub ${init?.method ?? "GET"} ${path} failed: ${res.status} ${await res.text()}`);
