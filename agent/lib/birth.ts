@@ -92,3 +92,72 @@ export function renderInstructions(input: BirthInput, slug: string = input.slug 
 export function emptyBrain(name: string): string {
   return `# ${name.trim()} — brain\n\nThis brain starts empty and grows as the channel teaches me. Live memory lives in the memory store (ADR 0003); this file is the public snapshot and is rewritten by \`snapshot_memory\`.\n`;
 }
+
+export type BirthFile = { path: string; content: string };
+
+export type BirthFiles = {
+  /** Repo-relative files to commit, in order: instructions, brain, .gitkeep, registry. */
+  files: BirthFile[];
+  /** The registry after the birth (input is not mutated). */
+  registry: Record<string, VillagerRecord>;
+  slug: string;
+  /** Sandbox-relative villager dir, e.g. village/villagers/copywriter. */
+  dir: string;
+};
+
+function requireText(input: BirthInput, field: "name" | "icon" | "intro" | "whatIDo"): string {
+  const value = input[field];
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`Birth needs a non-empty ${field}.`);
+  }
+  return value.trim();
+}
+
+/**
+ * Validate a birth and build the exact file set to commit. Pure: the caller
+ * supplies the current registry (read from git) and the resolved channel id.
+ */
+export function buildBirthFiles(args: {
+  registry: Record<string, VillagerRecord>;
+  channelId: string;
+  input: BirthInput;
+}): BirthFiles {
+  const { registry, channelId, input } = args;
+  const name = requireText(input, "name");
+  const icon = requireText(input, "icon");
+  requireText(input, "intro");
+  requireText(input, "whatIDo");
+
+  if (!ICON_RE.test(icon)) {
+    throw new Error(`Icon '${icon}' must be a Slack emoji in colon form, e.g. ':pencil:'.`);
+  }
+  const slug = input.slug?.trim() || deriveSlug(name);
+  if (!SLUG_RE.test(slug)) {
+    throw new Error(`Slug '${slug}' is invalid — use lowercase letters, digits, and single dashes (e.g. 'copywriter').`);
+  }
+  if (MIDWIFE_CHANNELS.has(channelId)) {
+    throw new Error(`Channel ${channelId} is a midwife channel — villagers can't be born there.`);
+  }
+  const occupant = registry[channelId];
+  if (occupant) {
+    throw new Error(`Channel ${channelId} already has a villager ('${occupant.name}', slug '${occupant.slug}').`);
+  }
+  for (const [otherChannel, r] of Object.entries(registry)) {
+    if (r.slug === slug) {
+      throw new Error(`Slug '${slug}' is already used by villager '${r.name}' in channel ${otherChannel}.`);
+    }
+  }
+
+  const dir = `village/villagers/${slug}`;
+  const record: VillagerRecord = { slug, name, icon, dir };
+  const next: Record<string, VillagerRecord> = { ...registry, [channelId]: record };
+  const base = `${VILLAGERS_ROOT}/${slug}`;
+
+  const files: BirthFile[] = [
+    { path: `${base}/instructions.md`, content: renderInstructions({ ...input, name, icon }, slug) },
+    { path: `${base}/memory/index.md`, content: emptyBrain(name) },
+    { path: `${base}/memory/atoms/.gitkeep`, content: "" },
+    { path: REGISTRY_PATH, content: JSON.stringify(next, null, 2) + "\n" },
+  ];
+  return { files, registry: next, slug, dir };
+}
