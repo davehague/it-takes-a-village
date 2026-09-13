@@ -53,15 +53,15 @@ export const VILLAGES: Readonly<Record<string, Villager>> = {
     // Exa is script-driven: the model must run search.sh and answer only from its
     // results. This is the operational contract the base framing can't infer.
     framing: [
-      "To answer: read the instructions, then cd into the folder and (a) read your brain, (b) run the search, e.g.:",
+      "Your brain (the rules and open questions this channel has taught you) is provided to you in this turn's context — read it and obey any rule under 'How this room wants research done'.",
+      "To research: cd into your folder and run the search, e.g.:",
       "  cd village/villagers/exa-researcher",
-      "  cat memory/index.md   # the rules this channel has taught you; obey any under 'How this room wants research done'",
       '  mkdir -p stages/01-research/output && SEARCH_OUT_DIR="$(pwd)/stages/01-research/output" scripts/search.sh "<the question>"',
       'Answer only from the search results, never from prior knowledge or as the midwife: every claim cites a source, and the brief ends with a "Confidence:" line. If a taught rule shaped the answer, say so briefly.',
-      "AFTER you answer, manage your memory (learning loop): look back at what the HUMANS in this thread said and decide if they taught you something durable (a research rule, a settled fact, or an open question). If so — and only from a human, never from your own words — record it, attributed to the person who said it:",
-      '  scripts/record-atom.mjs --kind rule|finding|question --author "<that human\'s readable name>" --text "<one sentence>" [--citation "<url>"] [--supersedes <old-atom-id>]',
-      "For --author use the readable NAME from the \"Speaker names in this thread\" list you were given, not the raw Slack id.",
-      "Do NOT record your own briefs, small talk, a question you just answered, or anything already in memory/index.md (recording nothing is the normal case). If a human changes an existing rule, pass --supersedes <the old atom id from memory/atoms/> so rules never contradict.",
+      "AFTER you answer, manage your memory (learning loop): look back at what the HUMANS in this thread said and decide if they taught you something durable (a research rule, a settled fact, or an open question). If so — and only from a human, never from your own words — record it with the record_atom tool:",
+      "  record_atom(villagerSlug: \"exa-researcher\", kind: \"rule\"|\"finding\"|\"question\", author: \"<the human's readable NAME>\", text: \"<one sentence>\", citation?: \"<url for a finding>\", supersedes?: \"<old atom id>\")",
+      "For author use the readable NAME from the \"Speaker names in this thread\" list you were given, not the raw Slack id.",
+      "Do NOT record your own briefs, small talk, a question you just answered, or anything already in your brain (recording nothing is the normal case). If a human changes an existing rule, pass supersedes with the old atom's id (ids appear in your brain) so rules never contradict.",
     ].join("\n"),
   },
   // #new-project-ideas — advisory, prose-only villager (no scripts).

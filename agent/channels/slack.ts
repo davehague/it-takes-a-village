@@ -5,6 +5,7 @@ import type {
   SlackMessage,
 } from "eve/channels/slack";
 import { ingestForMemory } from "../lib/memory-ingest";
+import { getMemoryStore } from "../lib/memory-store";
 import { villagerForChannel, type Villager } from "../lib/villages";
 
 /**
@@ -98,14 +99,38 @@ async function speakerMapFraming(
   ].join("\n");
 }
 
-/** Build the context messages for a villager turn: framing + the speaker map. */
+/**
+ * Fetch the villager's current brain (index.md) from the memory store and frame
+ * it for the turn. Replaces the old sandbox `cat memory/index.md` step: memory
+ * now lives in Blob (ADR 0003), which the sandbox can't reach, so the app runtime
+ * reads it and injects it — like the speaker map. Best-effort: no brain yet or a
+ * store error yields no line rather than breaking the reply.
+ */
+async function brainFraming(villager: Villager): Promise<string | null> {
+  try {
+    const index = await getMemoryStore().readIndex(villager.slug);
+    if (!index || !index.trim()) return null;
+    return [
+      "Your brain — the rules and open questions this channel has taught you (from memory/index.md). Obey any rule under 'How this room wants research done' and say which shaped your answer:",
+      "",
+      index.trim(),
+    ].join("\n");
+  } catch {
+    return null;
+  }
+}
+
+/** Build the context messages for a villager turn: framing + brain + speaker map. */
 async function villagerContext(
   ctx: SlackInboundMessageContext,
   message: SlackMessage,
   villager: Villager,
 ): Promise<string[]> {
-  const speakers = await speakerMapFraming(ctx, message);
-  return speakers ? [villagerFraming(villager), speakers] : [villagerFraming(villager)];
+  const [brain, speakers] = await Promise.all([
+    brainFraming(villager),
+    speakerMapFraming(ctx, message),
+  ]);
+  return [villagerFraming(villager), brain, speakers].filter((s): s is string => s !== null);
 }
 
 export default slackChannel({
