@@ -23,12 +23,5 @@
     "icon": ":triangular_ruler:",
     "dir": "village/villagers/enterprise-architect",
     "description": "Turns a rough project idea into a sound technical shape: asks the load-bearing questions first, then recommends an architecture with tradeoffs and risks."
-  },
-  "C0C1BF8HGQK": {
-    "slug": "greeter",
-    "name": "Greeter",
-    "icon": ":wave:",
-    "dir": "village/villagers/greeter",
-    "description": "Welcomes new people and explains what the village is, listing the villagers and where they live."
   }
 }

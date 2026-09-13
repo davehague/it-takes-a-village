@@ -72,6 +72,7 @@ type BirthInput = {
   slug?: string;         // optional override; else deriveSlug(name)
   intro: string;         // one paragraph: "I am **Copywriter** ✏️, a villager. I ..."
   whatIDo: string;       // Markdown body of the "What I do" section
+  description?: string;  // one line, third person, what it does — stored in the registry entry; required by buildBirthFiles (added Sep 13)
   voice?: string;        // optional short paragraph on tone; rendered as "How I sound"
 };
 ```
@@ -187,5 +188,5 @@ Every failure is a plain-English `Error` the midwife relays verbatim: channel no
 - **ICM multi-stage decision.** The interview decides whether the workflow needs a multi-stage `stages/NN-*/` layout (the Exa Researcher's interpretable-context shape, generalized to N stages).
 - **Handholding non-technical users.** The interview should abstract the technical complexity away — ask in the user's terms, propose defaults, explain what it's about to build in plain language.
 - **`channels:manage`.** Fix the Slack permission so the midwife creates the village channel herself instead of asking the human to.
-- **Maintain tool.** Commit edits to an existing villager's code (instructions/scripts) through the same git path, with the fixture as the gate.
+- ~~**Maintain tool.**~~ **Shipped Sep 13 (same day, after the first live birth surfaced it):** `update_villager` (`agent/lib/maintain.ts` pure + `agent/tools/update_villager.ts`) writes full-file replacements inside a villager's folder and/or changes its registry entry (`description`, `name`, `icon`) in one commit to `main` pinned with `expectedHeadSha`; `memory/` paths are refused. `read_villager_file` reads a villager's code file from `main` at the pinned head so edits are read-modify-write against the source of truth. `list_villagers` gives the midwife the live roster (slug, name, icon, `description`, channel id/name/`<#id|name>` ref, `deploying` flag for a birth that hasn't redeployed). The registry gained a per-villager `description` (required at birth) so "what does X do" is data, not taught memory. Not yet: the fixture gate (needs scripts), per-file executable mode, `retire_villager`.
 - **Redeploy-aware birth.** Poll the Vercel deployment so the midwife announces "I'm awake" instead of "~1–2 minutes".
