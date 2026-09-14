@@ -1,6 +1,6 @@
 # 0002 — Memory & interaction scope: thread vs channel
 
-**Status:** Deferred (2026-09-12) — staying thread-based for now, revisit intentionally
+**Status:** Superseded by [0004](0004-channel-scoped-trigger-mention-only.md) (2026-09-13) — was Deferred (2026-09-12)
 **Related:** [0001](0001-knowledge-ingestion-model.md) (ingestion), `eve-verification.md` (`threadContext` is thread-scoped; run loop is mention-only)
 
 ## Context
